@@ -139,7 +139,7 @@
         }
     </style>
 </head>
-<body class="min-h-full flex flex-col bg-zinc-950 text-zinc-100 selection:bg-zinc-800 selection:text-zinc-200 font-sans" x-data="vaultApp()" @keydown.window="handleGlobalKeys($event)" @dragover.prevent="handleDragOver($event)" @dragenter.prevent="handleDragEnter($event)" @dragleave.prevent="handleDragLeave($event)" @drop.prevent="handleDrop($event)">
+<body class="min-h-full flex flex-col bg-zinc-950 text-zinc-100 selection:bg-zinc-800 selection:text-zinc-200 font-sans" x-data="vaultApp()" @keydown.window="handleGlobalKeys($event)">
 
     <!-- Secure Google Login Overlay - blocks dashboard until auth -->
     <div x-show="authLoading" class="fixed inset-0 z-[100] bg-[#09090b] flex flex-col items-center justify-center gap-4" style="display: none;">
@@ -158,18 +158,6 @@
                 Sign in with Google
             </button>
             <p class="text-[11px] text-zinc-500 mt-3">Isolated per user at <span class="font-mono text-zinc-400">users/{uid}</span></p>
-        </div>
-    </div>
-
-    <!-- Drag & Drop Overlay for Bookmark Import -->
-    <div x-show="isDragOver" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" style="display: none;" class="fixed inset-0 z-[90] bg-[#09090b]/85 backdrop-blur-md border-2 border-dashed border-violet-500/50 flex flex-col items-center justify-center gap-4 pointer-events-none">
-        <div class="w-20 h-20 rounded-2xl bg-violet-500/20 border border-violet-500/30 flex items-center justify-center shadow-lg shadow-violet-500/10">
-            <svg class="w-10 h-10 text-violet-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-        </div>
-        <div class="text-center px-4">
-            <p class="text-xl font-semibold tracking-tight text-zinc-100">Drop bookmarks here</p>
-            <p class="text-xs text-zinc-400 mt-1.5">HTML or JSON — folders auto-created &amp; merged</p>
-            <p class="text-[11px] text-violet-300/70 mt-2 font-mono">.html • .json</p>
         </div>
     </div>
 
@@ -232,8 +220,8 @@
                     </button>
                     <!-- Sign Out - user-isolated -->
                     <div x-show="user" style="display: none;" class="flex items-center gap-2 ml-2 pl-2 border-l border-zinc-800">
-                        <img x-show="user && user.photoURL" :src="user ? user.photoURL : '" class="w-6 h-6 rounded-full border border-zinc-700 hidden sm:block" alt="">
-                        <span class="hidden lg:inline text-xs text-zinc-400 truncate max-w-[140px]" x-text="user ? user.email : '"></span>
+                        <img x-show="user && user.photoURL" :src="user ? user.photoURL : ''" class="w-6 h-6 rounded-full border border-zinc-700 hidden sm:block" alt="">
+                        <span class="hidden lg:inline text-xs text-zinc-400 truncate max-w-[140px]" x-text="user ? user.email : ''"></span>
                         <button @click="signOutUser()" class="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-100 rounded-lg text-xs font-medium transition">Sign Out</button>
                     </div>
                 </div>
@@ -520,7 +508,7 @@
                     <p class="text-sm text-zinc-400 font-medium">No matches found</p>
                     <p class="text-xs text-zinc-500 mt-1">Try refining your search keyword or clear the query.</p>
                     <button 
-                        @click="searchQuery = '" 
+                        @click="searchQuery = ''" 
                         class="mt-3 text-xs text-zinc-300 hover:underline hover:text-white"
                     >
                         Clear Search
@@ -534,7 +522,7 @@
                 >
                     <template x-for="(folder, index) in filteredFolders" :key="folder.id">
                         <section 
-                            :draggable="searchQuery.trim() === ' ? 'true' : 'false'"
+                            :draggable="searchQuery.trim() === '' ? 'true' : 'false'"
                             @dragstart="handleDragStart($event, folder)"
                             @dragover.prevent="handleDragOver($event, folder)"
                             @dragenter.prevent="handleDragOver($event, folder)"
@@ -813,7 +801,7 @@
                                     </template>
                                     <button @click="deleteLink(activeFolder, link.id)" class="inline-flex items-center justify-center px-2 py-1 bg-zinc-950 hover:bg-red-950/40 border border-zinc-800 hover:border-red-900 text-zinc-500 hover:text-red-400 rounded-lg transition" :class="folderViewSize === 'small' ? 'text-[10px] py-0.5 px-1.5' : 'text-[11px]'" title="Delete">
                                         <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                                        <span :class="folderViewSize === 'small' ? 'hidden' : '" class="ml-1">Delete</span>
+                                        <span :class="folderViewSize === 'small' ? 'hidden' : ''" class="ml-1">Delete</span>
                                     </button>
                                 </div>
                             </div>
@@ -1002,7 +990,7 @@
                 <div>
                     <h3 class="text-sm font-semibold text-zinc-100">Delete Custom Folder?</h3>
                     <p class="text-xs text-zinc-400 mt-1">
-                        Are you sure you want to delete folder <span class="text-zinc-200 font-semibold" x-text="confirmDeleteFolderData ? `&ldquo;${confirmDeleteFolderData.name}&rdquo;` : '"></span> and all of its nested bookmarks?
+                        Are you sure you want to delete folder <span class="text-zinc-200 font-semibold" x-text="confirmDeleteFolderData ? `&ldquo;${confirmDeleteFolderData.name}&rdquo;` : ''"></span> and all of its nested bookmarks?
                     </p>
                 </div>
             </div>
@@ -1111,8 +1099,8 @@
                     </div>
                     <div class="min-w-0">
                         <h3 class="text-xs font-semibold text-zinc-100">Move link</h3>
-                        <p class="text-xs font-medium text-zinc-200 truncate mt-0.5" x-text="moveModalData ? moveModalData.linkTitle : '"></p>
-                        <p class="text-[11px] text-zinc-500 truncate" x-text="moveModalData ? moveModalData.linkUrl : '"></p>
+                        <p class="text-xs font-medium text-zinc-200 truncate mt-0.5" x-text="moveModalData ? moveModalData.linkTitle : ''"></p>
+                        <p class="text-[11px] text-zinc-500 truncate" x-text="moveModalData ? moveModalData.linkUrl : ''"></p>
                         <p class="text-[11px] text-zinc-500 mt-1">from <span class="text-zinc-400 font-medium" x-text="moveModalData ? moveModalData.sourceFolderName : ''"></span></p>
                     </div>
                 </div>
@@ -1329,13 +1317,13 @@
         function vaultApp() {
             return {
                 folders: [],
-                searchQuery: ',
-                newFolderName: ',
+                searchQuery: '',
+                newFolderName: '',
                 isAddFolderOpen: false,
                 editingFolderId: null,
-                editingFolderName: ',
+                editingFolderName: '',
                 editingLinkId: null,
-                editingLinkTitle: ',
+                editingLinkTitle: '',
                 moveModalData: null,
                 activeFolderId: null,
                 user: null,
@@ -1346,17 +1334,15 @@
                 isMergeModalOpen: false,
                 isBulkMoveModalOpen: false,
                 isFolderBulkMoveModalOpen: false,
-                isDragOver: false,
-                dragCounter: 0,
                 isAiPanelOpen: false,
-                aiRawText: ',
+                aiRawText: '',
                 isAiSorting: false,
-                aiStatus: ',
+                aiStatus: '',
 
                 // Quick Paste State
                 isQuickPasteOpen: true,
-                quickPasteText: ',
-                quickPasteFolderId: ',
+                quickPasteText: '',
+                quickPasteFolderId: '',
 
                 // Drag & Drop State
                 draggedId: null,
@@ -1413,11 +1399,11 @@
                     // Browser History: hash sync for Back button
                     const applyHash = () => {
                         const hash = window.location.hash;
-                        if (!hash || hash === '#' || hash === ') {
+                        if (!hash || hash === '#' || hash === '') {
                             if (this.activeFolderId !== null) {
                                 this.activeFolderId = null;
                                 this.selectedLinkIds = [];
-                                document.body.style.overflow = ';
+                                document.body.style.overflow = '';
                             }
                             return;
                         }
@@ -1618,7 +1604,7 @@
                     this.folders.unshift(newFolder);
                     // Auto-select new folder for Quick Paste if none selected
                     this.quickPasteFolderId = newFolder.id;
-                    this.newFolderName = ';
+                    this.newFolderName = '';
                     this.isAddFolderOpen = false;
                     this.showToast(`Folder "${name}" successfully created.`);
                 },
@@ -1667,7 +1653,7 @@
                         this.showToast(`Renamed to "${newTitle}"`);
                     }
                     this.editingLinkId = null;
-                    this.editingLinkTitle = ';
+                    this.editingLinkTitle = '';
                 },
                 cancelRenameLink() {
                     this.editingLinkId = null;
@@ -1720,12 +1706,12 @@
                 
                 deleteFolder(folderId) {
                     const folder = this.folders.find(f => f.id === folderId);
-                    const folderName = folder ? folder.name : ';
+                    const folderName = folder ? folder.name : '';
                     this.folders = this.folders.filter(f => f.id !== folderId);
                     this.confirmDeleteFolderData = null;
                     // Reset quick paste selection if deleted folder was selected
                     if (this.quickPasteFolderId === folderId) {
-                        this.quickPasteFolderId = this.folders.length > 0 ? this.folders[0].id : ';
+                        this.quickPasteFolderId = this.folders.length > 0 ? this.folders[0].id : '';
                     }
                     this.showToast(`Folder "${folderName}" and its links removed.`);
                 },
@@ -1753,13 +1739,13 @@
                     const hadHash = window.location.hash && window.location.hash.length > 1;
                     this.activeFolderId = null;
                     this.selectedLinkIds = [];
-                    document.body.style.overflow = ';
+                    document.body.style.overflow = '';
                     if (hadHash) {
                         // Keep Back button history clean - go back if we pushed, else clear hash
                         if (history.state && history.state.folderId) {
                             history.back();
                         } else {
-                            history.pushState(null, ', window.location.pathname + window.location.search);
+                            history.pushState(null, '', window.location.pathname + window.location.search);
                         }
                     }
                 },
@@ -1900,289 +1886,6 @@
                     this.showToast(`Bulk moved ${moved} link(s) → "${target.name}"`);
                 },
                 
-                handleDragEnter(e) {
-                    if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) {
-                        this.dragCounter++;
-                        this.isDragOver = true;
-                    }
-                },
-                handleDragOver(e) {
-                    if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) {
-                        e.dataTransfer.dropEffect = 'copy';
-                        this.isDragOver = true;
-                    }
-                },
-                handleDragLeave(e) {
-                    // Use counter to avoid flicker when dragging over children
-                    this.dragCounter = Math.max(0, this.dragCounter - 1);
-                    if (this.dragCounter === 0) this.isDragOver = false;
-                },
-                async handleDrop(e) {
-                    this.isDragOver = false;
-                    this.dragCounter = 0;
-                    const files = Array.from(e.dataTransfer.files || []);
-                    const bookmarkFiles = files.filter(f => /\.html?$|\.json$/i.test(f.name));
-                    if (bookmarkFiles.length === 0) {
-                        // Check if dropped files are bookmark files, else ignore
-                        if (files.length > 0) this.showToast('Drop .html or .json bookmark files', 'info');
-                        return;
-                    }
-                    await this.processBookmarkFiles(bookmarkFiles);
-                },
-                async processBookmarkFiles(files) {
-                    const mergedMap = new Map();
-                    for (const file of files) {
-                        const text = await file.text();
-                        let parsed = new Map();
-                        if (/\.json$/i.test(file.name)) {
-                            parsed = this.parseBookmarkJSON(text);
-                        } else {
-                            parsed = this.parseBookmarkHTML(text);
-                        }
-                        for (const [name, links] of parsed.entries()) {
-                            if (!mergedMap.has(name)) mergedMap.set(name, new Map());
-                            const urlMap = mergedMap.get(name);
-                            for (const l of links) {
-                                const key = l.url.toLowerCase();
-                                if (!urlMap.has(key)) urlMap.set(key, l);
-                            }
-                        }
-                    }
-                    let createdFolders = 0;
-                    let totalLinks = 0;
-                    const touchedFolders = new Set();
-                    for (const [name, urlMap] of mergedMap.entries()) {
-                        const links = Array.from(urlMap.values());
-                        if (links.length === 0) continue;
-                        let folder = this.folders.find(f => f.name.toLowerCase() === name.toLowerCase());
-                        if (!folder) {
-                            folder = { id: 'folder-import-' + Date.now() + '-' + Math.random().toString(36).slice(2,6), name: name, isCollapsed: false, links: [] };
-                            this.folders.push(folder);
-                            createdFolders++;
-                        }
-                        let added = 0;
-                        for (const l of links) {
-                            const exists = folder.links.some(ex => ex.url.toLowerCase() === l.url.toLowerCase());
-                            if (!exists) {
-                                const cleanTitle = this.makeCleanTitle ? this.makeCleanTitle(l.url, l.title) : (l.title || l.url);
-                                folder.links.push({ id: 'link-import-' + Date.now() + '-' + Math.random().toString(36).slice(2,6), title: cleanTitle, url: l.url, dateAdded: new Date().toISOString() });
-                                added++;
-                            }
-                        }
-                        if (added > 0) {
-                            totalLinks += added;
-                            touchedFolders.add(name);
-                        }
-                    }
-                    const totalFolders = touchedFolders.size;
-                    await this.saveCloud();
-                    this.showToast(`Successfully imported ${totalFolders} folders and ${totalLinks} links!`, 'success');
-                },
-                parseBookmarkHTML(text) {
-                    const map = new Map(); // name -> array of {url, title}
-                    try {
-                        const doc = new DOMParser().parseFromString(text, 'text/html');
-                        // Helper to ensure folder exists
-                        const ensure = (name) => { if (!map.has(name)) map.set(name, []); };
-                        // Walk DL recursively
-                        const walkDL = (dl, currentFolder) => {
-                            // Get direct children, iterate sequentially to handle DT->DL pairing
-                            const children = Array.from(dl.children);
-                            for (let i = 0; i < children.length; i++) {
-                                const el = children[i];
-                                if (el.tagName === 'DT') {
-                                    const h3 = el.querySelector(':scope > H3');
-                                    const a = el.querySelector(':scope > A');
-                                    // Some browsers put H3 inside DT as first child
-                                    const first = el.firstElementChild;
-                                    if (first && first.tagName === 'H3') {
-                                        const name = first.textContent.trim() || 'Untitled';
-                                        ensure(name);
-                                        // Find next DL sibling (folder contents)
-                                        let nextDL = null;
-                                        let j = i + 1;
-                                        while (j < children.length) {
-                                            const sib = children[j];
-                                            if (sib.tagName === 'DL') { nextDL = sib; break; }
-                                            if (sib.tagName === 'DD' || sib.tagName === 'P') { j++; continue; }
-                                            break;
-                                        }
-                                        // Also check inner DL inside DT (some exports)
-                                        const innerDL = el.querySelector(':scope > DL');
-                                        if (innerDL) nextDL = innerDL;
-                                        if (nextDL) {
-                                            walkDL(nextDL, name);
-                                            // Skip the DL we just processed if it was sibling
-                                            if (nextDL && children.includes(nextDL)) {
-                                                i = children.indexOf(nextDL);
-                                            }
-                                        }
-                                    } else if (first && first.tagName === 'A') {
-                                        const href = first.getAttribute('href') || first.getAttribute('HREF');
-                                        const title = (first.textContent || '').trim();
-                                        if (href && /^https?:\/\//i.test(href)) {
-                                            const target = currentFolder || 'General';
-                                            ensure(target);
-                                            map.get(target).push({ url: href, title: title || href });
-                                        }
-                                    } else {
-                                        // Fallback: check for A/H3 deeper
-                                        const h3Inner = el.querySelector('H3');
-                                        const aInner = el.querySelector('A');
-                                        if (h3Inner && !aInner) {
-                                            const name = h3Inner.textContent.trim() || 'Untitled';
-                                            ensure(name);
-                                            let nextDL = null;
-                                            let j = i + 1;
-                                            while (j < children.length) {
-                                                if (children[j].tagName === 'DL') { nextDL = children[j]; break; }
-                                                if (children[j].tagName === 'DD' || children[j].tagName === 'P') { j++; continue; }
-                                                break;
-                                            }
-                                            if (nextDL) { walkDL(nextDL, name); i = children.indexOf(nextDL); }
-                                        } else if (aInner) {
-                                            const href = aInner.getAttribute('href') || aInner.getAttribute('HREF');
-                                            const title = (aInner.textContent || '').trim();
-                                            if (href && /^https?:\/\//i.test(href)) {
-                                                const target = currentFolder || 'General';
-                                                ensure(target);
-                                                map.get(target).push({ url: href, title: title || href });
-                                            }
-                                        }
-                                    }
-                                } else if (el.tagName === 'DL') {
-                                    // DL without preceding H3 - process as same folder
-                                    // Avoid double-processing if this DL was already handled as nextDL
-                                    // Check if previous DT was H3 that already handled this DL, then skip
-                                    const prev = children[i-1];
-                                    const prevIsFolder = prev && prev.tagName === 'DT' && prev.querySelector('H3');
-                                    if (!prevIsFolder) {
-                                        walkDL(el, currentFolder);
-                                    }
-                                }
-                            }
-                        };
-                        const rootDL = doc.querySelector('DL');
-                        if (rootDL) {
-                            walkDL(rootDL, null);
-                        } else {
-                            // Fallback: find all A tags and put in General
-                            const anchors = doc.querySelectorAll('a[href]');
-                            anchors.forEach(a => {
-                                const href = a.getAttribute('href');
-                                const title = (a.textContent || '').trim();
-                                if (href && /^https?:\/\//i.test(href)) {
-                                    ensure('General');
-                                    map.get('General').push({ url: href, title: title || href });
-                                }
-                            });
-                        }
-                    } catch (e) {
-                        console.error('HTML parse error', e);
-                    }
-                    // Convert Map of arrays (dedup within each folder)
-                    const deduped = new Map();
-                    for (const [name, arr] of map.entries()) {
-                        const seen = new Map();
-                        for (const l of arr) {
-                            const k = l.url.toLowerCase();
-                            if (!seen.has(k)) seen.set(k, l);
-                        }
-                        if (seen.size > 0) deduped.set(name, Array.from(seen.values()));
-                    }
-                    return deduped;
-                },
-                parseBookmarkJSON(text) {
-                    const map = new Map();
-                    const ensure = (name) => { if (!map.has(name)) map.set(name, []); };
-                    try {
-                        const data = JSON.parse(text);
-                        const walk = (node, currentFolder) => {
-                            if (!node) return;
-                            if (Array.isArray(node)) {
-                                node.forEach(child => walk(child, currentFolder));
-                                return;
-                            }
-                            if (node.roots && typeof node.roots === 'object') {
-                                Object.values(node.roots).forEach(root => walk(root, currentFolder));
-                                return;
-                            }
-                            // Chrome/Firefox folder detection
-                            const isFolder = node.type === 'folder' || Array.isArray(node.children);
-                            const hasChildren = Array.isArray(node.children);
-                            let name = node.name || node.title || null;
-                            // Handle root containers that should not become folders themselves
-                            const skipNames = ['roots','bookmark_bar','bookmarksBar','other','unsorted','synced','mobile'];
-                            const isSkipRoot = name && skipNames.includes(name.toLowerCase().replace(/[^a-z]/g,''));
-                            if (isFolder && hasChildren) {
-                                if (isSkipRoot) {
-                                    // Don't create folder for skip root, walk children with currentFolder
-                                    node.children.forEach(child => walk(child, currentFolder));
-                                    return;
-                                }
-                                const folderName = name || 'Untitled';
-                                ensure(folderName);
-                                node.children.forEach(child => {
-                                    if (child.type === 'url' || child.url) {
-                                        const url = child.url || child.uri;
-                                        const title = child.name || child.title || url || ''';
-                                        if (url && /^https?:\/\//i.test(url)) {
-                                            map.get(folderName).push({ url, title: title || url });
-                                        }
-                                    } else {
-                                        walk(child, folderName);
-                                    }
-                                });
-                                // Also walk nested folders that may have been missed
-                                node.children.filter(c => c.type === 'folder' || c.children).forEach(c => {
-                                    // Already handled via recursion above, but ensure deep walk
-                                });
-                            } else if (node.url || node.uri) {
-                                const url = node.url || node.uri;
-                                const title = node.name || node.title || url;
-                                if (url && /^https?:\/\//i.test(url)) {
-                                    const target = currentFolder || 'General';
-                                    ensure(target);
-                                    map.get(target).push({ url, title: title || url });
-                                }
-                            } else if (node.children) {
-                                walk(node.children, currentFolder);
-                            } else if (typeof node === 'object') {
-                                // Generic object with folder-like keys
-                                for (const key of Object.keys(node)) {
-                                    const val = node[key];
-                                    if (Array.isArray(val) || (val && typeof val === 'object')) {
-                                        walk(val, currentFolder);
-                                    }
-                                }
-                            }
-                        };
-                        walk(data, null);
-                        // Fallback: if map empty but data is array of links
-                        if (map.size === 0 && Array.isArray(data)) {
-                            data.forEach(item => {
-                                if (item.url) {
-                                    ensure('General');
-                                    map.get('General').push({ url: item.url, title: item.title || item.name || item.url });
-                                }
-                            });
-                        }
-                    } catch (e) {
-                        console.error('JSON parse error'', e);
-                    }
-                    // Dedup
-                    const deduped = new Map();
-                    for (const [name, arr] of map.entries()) {
-                        const seen = new Map();
-                        for (const l of arr) {
-                            const k = l.url.toLowerCase();
-                            if (!seen.has(k)) seen.set(k, l);
-                        }
-                        if (seen.size > 0) deduped.set(name, Array.from(seen.values()));
-                    }
-                    return deduped;
-                },
-
                 openAllLinks(folder) {
                     if (!folder.links || folder.links.length === 0) {
                         this.showToast('No links in this folder to open.', 'info');
@@ -2326,8 +2029,8 @@
                     folder.links.unshift(newLink);
                     
                     // Clear inputs
-                    urlEl.value = ';
-                    if (titleEl) titleEl.value = ';
+                    urlEl.value = '';
+                    if (titleEl) titleEl.value = '';
                     
                     this.showToast(`Added: "${title}"`);
                 },
@@ -2384,13 +2087,13 @@
                         const urlRe = /https?:\/\/[^\s"'<>`]+/gi;
                         const matches = text.match(urlRe) || [];
                         matches.forEach(raw => {
-                            let href = raw.replace(/[),.;!?]+$/,');
+                            let href = raw.replace(/[),.;!?]+$/,'');
                             try {
                                 const u = new URL(href);
                                 const key = u.href.toLowerCase();
                                 if (seen.has(key)) return;
                                 seen.add(key);
-                                out.push({ url: u.href, titleHint: ' });
+                                out.push({ url: u.href, titleHint: '' });
                             } catch(e) {}
                         });
                         // Also bare domains per line like example.com/path
@@ -2530,9 +2233,9 @@ ${links.map(l=>` - ${l.url} | hint: ${l.titleHint||'(none)'}`).join('\n')}`;
                     // Keep prompt visible for audit - console
                     console.log('[AI Smart Sort Prompt]\n', AI_PROMPT);
                     console.log('[AI Smart Sort Result]', entries.map(e=>`${e[0]}: ${e[1].length}`));
-                    this.showToast(`AI sorted ${moved} link(s) into ${entries.length} folder(s)${created?` â€¢ ${created} new` : '} âœ¨`);
+                    this.showToast(`AI sorted ${moved} link(s) into ${entries.length} folder(s)${created?` â€¢ ${created} new` : ''} âœ¨`);
                     // optional: clear input but keep panel open for review
-                    // this.aiRawText = ';
+                    // this.aiRawText = '';
                 },
                 
                 getDomainIcon(url) {
@@ -2692,12 +2395,6 @@ ${links.map(l=>` - ${l.url} | hint: ${l.titleHint||'(none)'}`).join('\n')}`;
     </script>
 </body>
 </html>
-
-
-
-
-
-
 
 
 
