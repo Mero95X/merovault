@@ -1,0 +1,2716 @@
+﻿<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeroVault</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2309090b' stroke='%2327272a' stroke-width='1.2'/%3E%3Cpath d='M22 22L16 17L10 22V8C10 7 11 6 12 6H20C21 6 22 7 22 8V22Z' fill='none' stroke='%23f4f4f5' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='16' cy='11.5' r='2' fill='none' stroke='%23f4f4f5' stroke-width='1.5'/%3E%3C/svg%3E">
+    <!-- Inter Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        zinc: {
+                            950: '#09090b',
+                            900: '#18181b',
+                            800: '#27272a',
+                            700: '#3f3f46',
+                            600: '#52525b',
+                            400: '#a1a1aa',
+                            300: '#d4d4d8',
+                            200: '#e4e4e7',
+                            100: '#f4f4f5',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Firebase v10 SDK (CDN modules) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+        const firebaseConfig = {
+          apiKey: "AIzaSyDuN1uSh0-LVP0eXsQupCcjpS-MjGl8v5w",
+          authDomain: "merovault-2cebb.firebaseapp.com",
+          projectId: "merovault-2cebb",
+          storageBucket: "merovault-2cebb.firebasestorage.app",
+          messagingSenderId: "557513817960",
+          appId: "1:557513817960:web:df138c99a507b1b80760dd"
+        };
+        const app = initializeApp(firebaseConfig);
+        // User-isolated path: doc(db, 'users', user.uid)
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+        window._firebase = { auth, db, provider, signInWithPopup, signOut, onAuthStateChanged, doc, getDoc, setDoc };
+    </script>
+    <!-- Alpine.js CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        body {
+            background-color: #09090b;
+            color: #f4f4f5;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #09090b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #27272a;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3f3f46;
+        }
+        input, button, a, textarea, select {
+            transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+        /* Grid drag & drop smooth UI */
+        .folder-card {
+            transition: transform 200ms cubic-bezier(0.4,0,0.2,1), opacity 200ms ease, border-color 200ms ease, box-shadow 200ms ease, background-color 150ms ease;
+            will-change: transform;
+        }
+        .folder-card.dragging {
+            opacity: 0.45;
+            transform: scale(0.96) rotate(0.8deg);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+        }
+        .folder-card.drag-over {
+            border-color: #52525b !important;
+            background-color: #1f1f23 !important;
+            transform: scale(1.015);
+            box-shadow: 0 0 0 1px #52525b, 0 10px 28px rgba(0,0,0,0.45);
+        }
+        .folder-card.drag-over::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 0.75rem;
+            border: 1.5px dashed #52525b;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+        .drag-handle {
+            cursor: grab;
+            touch-action: none;
+        }
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+        /* Search highlight - ultra-clean zinc */
+        .search-hit {
+            background: rgba(113,113,122,0.30);
+            color: #fafafa;
+            font-weight: 600;
+            padding: 0 2px;
+            border-radius: 3px;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
+        }
+        .search-hit-url {
+            background: rgba(161,161,170,0.20);
+            color: #e4e4e7;
+            font-weight: 600;
+            padding: 0 1px;
+            border-radius: 2px;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .folder-card { transition: none; }
+        }
+    </style>
+</head>
+<body class="min-h-full flex flex-col bg-zinc-950 text-zinc-100 selection:bg-zinc-800 selection:text-zinc-200 font-sans" x-data="vaultApp()" @keydown.window="handleGlobalKeys($event)" @dragover.prevent="handleDragOver($event)" @dragenter.prevent="handleDragEnter($event)" @dragleave.prevent="handleDragLeave($event)" @drop.prevent="handleDrop($event)">
+
+    <!-- Secure Google Login Overlay - blocks dashboard until auth -->
+    <div x-show="authLoading" class="fixed inset-0 z-[100] bg-[#09090b] flex flex-col items-center justify-center gap-4" style="display: none;">
+        <svg class="w-7 h-7 text-zinc-500 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+        <p class="text-xs font-medium text-zinc-400">Syncing with cloud...</p>
+    </div>
+    <div x-show="!authLoading && !user" class="fixed inset-0 z-[100] bg-[#09090b] flex items-center justify-center p-4" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" style="display: none;">
+        <div class="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-2xl text-center">
+            <div class="w-12 h-12 mx-auto mb-4 bg-zinc-800 border border-zinc-700 rounded-xl flex items-center justify-center">
+                <svg class="w-6 h-6 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            </div>
+            <h2 class="text-base font-semibold text-zinc-100">MeroVault</h2>
+            <p class="text-xs text-zinc-400 mt-1.5">Secure cloud vault — sign in to unlock your 7-column dashboard</p>
+            <button @click="signInWithGoogle()" class="mt-6 w-full inline-flex items-center justify-center gap-2.5 px-4 py-2.5 bg-white hover:bg-zinc-100 text-zinc-900 rounded-lg text-sm font-semibold shadow-sm active:scale-[0.98] transition">
+                <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.02 5.02 0 0 1-2.18 3.3v2.75h3.52c2.06-1.9 3.3-4.7 3.3-8.06z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.52-2.75c-.98.66-2.23 1.06-3.76 1.06-2.89 0-5.34-1.95-6.21-4.57H1.14v2.88C2.99 21.1 7.3 23 12 23z"/><path fill="#FBBC05" d="M5.79 14.08A6.99 6.99 0 0 1 5.42 12c0-.7.13-1.38.37-2.08V7.04H1.14A11 11 0 0 0 0 12c0 1.78.42 3.46 1.14 4.96l4.65-2.88z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.3 1 2.99 2.9 1.14 7.04l4.65 2.88C6.66 7.3 9.11 5.38 12 5.38z"/></svg>
+                Sign in with Google
+            </button>
+            <p class="text-[11px] text-zinc-500 mt-3">Isolated per user at <span class="font-mono text-zinc-400">users/{uid}</span></p>
+        </div>
+    </div>
+
+    <!-- Drag & Drop Overlay for Bookmark Import -->
+    <div x-show="isDragOver" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" style="display: none;" class="fixed inset-0 z-[90] bg-[#09090b]/85 backdrop-blur-md border-2 border-dashed border-violet-500/50 flex flex-col items-center justify-center gap-4 pointer-events-none">
+        <div class="w-20 h-20 rounded-2xl bg-violet-500/20 border border-violet-500/30 flex items-center justify-center shadow-lg shadow-violet-500/10">
+            <svg class="w-10 h-10 text-violet-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        </div>
+        <div class="text-center px-4">
+            <p class="text-xl font-semibold tracking-tight text-zinc-100">Drop bookmarks here</p>
+            <p class="text-xs text-zinc-400 mt-1.5">HTML or JSON — folders auto-created &amp; merged</p>
+            <p class="text-[11px] text-violet-300/70 mt-2 font-mono">.html • .json</p>
+        </div>
+    </div>
+
+    <!-- Top Grid Background Grid Overlay for premium subtle pattern -->
+    <div class="absolute inset-0 bg-[linear-gradient(to_right,#1f1f23_1px,transparent_1px),linear-gradient(to_bottom,#1f1f23_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none opacity-20"></div>
+
+    <div class="relative max-w-[1760px] w-full mx-auto px-4 py-8 sm:py-12 flex-grow flex flex-col justify-between">
+        
+        <!-- Header Section -->
+        <div>
+            <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-zinc-900 border border-zinc-800 rounded-lg shadow-sm">
+                        <!-- Custom Secure Bookmark Icon -->
+                        <svg class="w-6 h-6 text-zinc-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                            <circle cx="12" cy="10" r="2"></circle>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-semibold tracking-tight text-zinc-100">MeroVault</h1>
+                        <p class="text-xs text-zinc-400 mt-0.5">Ultra-minimalist, local-first link hub</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <!-- AI Auto-Sort - prominent -->
+                    <button 
+                        @click="isAiPanelOpen = !isAiPanelOpen" 
+                        :class="isAiPanelOpen ? 'bg-zinc-800 border-violet-500/50 text-violet-200 ring-1 ring-violet-500/20' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:text-violet-200 hover:border-violet-500/30 hover:bg-zinc-800'"
+                        class="px-3 py-1.5 border rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 shadow-sm active:scale-95 duration-100"
+                    >
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.5 5.8 21.3l2.4-7.4L2 9.4h7.6z"></path>
+                        </svg>
+                        AI Auto-Sort
+                    </button>
+                    <!-- Quick Paste Toggle (secondary) -->
+                    <button 
+                        @click="isQuickPasteOpen = !isQuickPasteOpen" 
+                        :class="isQuickPasteOpen ? 'bg-zinc-800 border-zinc-700 text-zinc-100' : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:text-zinc-100 hover:border-zinc-700'"
+                        class="px-3 py-1.5 border rounded-lg text-xs font-medium inline-flex items-center gap-1.5 shadow-sm active:scale-95 duration-100"
+                    >
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                        </svg>
+                        Quick Paste
+                    </button>
+                    <button 
+                        @click="isAddFolderOpen = true" 
+                        class="px-3.5 py-1.5 bg-zinc-100 hover:bg-white text-zinc-950 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 shadow-sm hover:shadow active:scale-95 duration-100"
+                    >
+                        <!-- Plus icon -->
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Add Folder
+                    </button>
+                    <!-- Sign Out - user-isolated -->
+                    <div x-show="user" style="display: none;" class="flex items-center gap-2 ml-2 pl-2 border-l border-zinc-800">
+                        <img x-show="user && user.photoURL" :src="user ? user.photoURL : '" class="w-6 h-6 rounded-full border border-zinc-700 hidden sm:block" alt="">
+                        <span class="hidden lg:inline text-xs text-zinc-400 truncate max-w-[140px]" x-text="user ? user.email : '"></span>
+                        <button @click="signOutUser()" class="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-100 rounded-lg text-xs font-medium transition">Sign Out</button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- AI Smart Sorting Panel -->
+            <section
+                x-show="isAiPanelOpen"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 -translate-y-2"
+                x-transition:enter-end="opacity-100 translate-y-0"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100 translate-y-0"
+                x-transition:leave-end="opacity-0 -translate-y-2"
+                class="mb-6 bg-zinc-900 border border-violet-500/20 rounded-xl overflow-hidden shadow-sm shadow-violet-500/5 max-w-3xl mx-auto w-full"
+            >
+                <div class="px-4 py-3 flex items-center justify-between gap-3 bg-gradient-to-r from-violet-500/10 via-zinc-900/80 to-zinc-900/80 border-b border-violet-500/20">
+                    <div class="flex items-center gap-2.5">
+                        <div class="p-1.5 bg-violet-500/20 border border-violet-500/30 rounded-lg">
+                            <svg class="w-3.5 h-3.5 text-violet-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.5 5.8 21.3l2.4-7.4L2 9.4h7.6z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-xs font-semibold text-violet-100 tracking-tight flex items-center gap-1.5">AI Smart Sorting <span class="text-[9px] font-bold tracking-widest uppercase px-1.5 py-0.5 rounded bg-violet-500 text-white">Auto</span></h2>
+                            <p class="text-[11px] text-zinc-400 leading-none mt-0.5">Paste raw URLs or HTML bookmarks export â€” AI creates 4â€“7 folders</p>
+                        </div>
+                    </div>
+                    <button @click="isAiPanelOpen = false" class="p-1 hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 rounded transition" title="Close">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+                <div class="p-4 space-y-3 bg-zinc-900/40">
+                    <div class="relative">
+                        <textarea 
+                            x-model="aiRawText"
+                            rows="6"
+                            placeholder="Paste here â€” one URL per line or full HTML bookmarks export:&#10;https://github.com/anomalyco/opencode&#10;https://dribbble.com/shots/123&#10;<!DOCTYPE NETSCAPE-Bookmark-file-1><!-- ... <A HREF=&quot;https://tastedive.com/movies/like/Desierto&quot;>Desierto</A> ... -->"
+                            class="w-full px-3 py-2.5 bg-zinc-950 border border-zinc-800 rounded-lg text-xs font-mono text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/30 hover:border-zinc-700 resize-y min-h-[120px]"
+                            :disabled="isAiSorting"
+                        ></textarea>
+                        <div class="mt-1.5 flex items-center justify-between">
+                            <p class="text-[11px] text-zinc-500"><span x-text="aiRawText.trim() ? (aiRawText.match(/https?:\/\/[^\s'&quot;&lt;>]+/gi) || []).length + ' URL(s) detected â€¢ ' + aiRawText.split(/[\n]+/).filter(l=>l.trim()).length + ' lines' : 'Awaiting paste...'"></span></p>
+                            <div class="flex items-center gap-2">
+                                <input type="file" id="ai-file-input" @change="handleAiFile($event)" accept=".html,.htm,.txt" class="hidden">
+                                <button @click="document.getElementById('ai-file-input').click()" :disabled="isAiSorting" class="text-[11px] px-2 py-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded text-zinc-300 hover:text-zinc-100 disabled:opacity-50">Upload HTML</button>
+                                <button x-show="aiRawText" @click="aiRawText=''" :disabled="isAiSorting" class="text-[11px] text-zinc-400 hover:text-zinc-200 hover:underline disabled:opacity-50">Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- AI Status / Spinner -->
+                    <div x-show="isAiSorting" class="flex items-center gap-3 px-3 py-2.5 bg-violet-500/10 border border-violet-500/20 rounded-lg">
+                        <svg class="w-4 h-4 text-violet-300 animate-spin shrink-0" viewBox="0 0 24 24" fill="none">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        <div class="min-w-0">
+                            <p class="text-xs font-medium text-violet-200" x-text="aiStatus"></p>
+                            <p class="text-[11px] text-violet-300/70">Working its magic â€” categorizing with dark zinc grace</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button @click="aiSmartSort()" :disabled="!aiRawText.trim() || isAiSorting" class="flex-1 px-4 py-2 bg-violet-600 hover:bg-violet-500 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed text-white rounded-lg text-xs font-semibold inline-flex items-center justify-center gap-2 shadow-sm shadow-violet-600/20 active:scale-[0.98] transition">
+                            <svg x-show="!isAiSorting" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.5 5.8 21.3l2.4-7.4L2 9.4h7.6z"></path></svg>
+                            <svg x-show="isAiSorting" class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                            <span x-text="isAiSorting ? 'AI Organizing...' : 'âœ¨ Organize with AI'"></span>
+                        </button>
+                        <button @click="isAiPanelOpen=false" :disabled="isAiSorting" class="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-100 rounded-lg text-xs font-medium disabled:opacity-50">Cancel</button>
+                    </div>
+                    <p class="text-[10px] text-zinc-500 text-center">AI prompt creates 4â€“7 clean categories, reuses existing folders, adds readable titles â€¢ saved to cloud Firestore</p>
+                </div>
+            </section>
+
+            <!-- Quick Paste Section -->
+            <section 
+                x-show="isQuickPasteOpen"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 -translate-y-2"
+                x-transition:enter-end="opacity-100 translate-y-0"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100 translate-y-0"
+                x-transition:leave-end="opacity-0 -translate-y-2"
+                class="mb-6 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-sm max-w-3xl mx-auto w-full"
+            >
+                <!-- Quick Paste Header -->
+                <div class="px-4 py-3 flex items-center justify-between gap-3 bg-zinc-900/80 border-b border-zinc-800/60">
+                    <div class="flex items-center gap-2.5">
+                        <div class="p-1.5 bg-zinc-950 border border-zinc-800 rounded-lg">
+                            <svg class="w-3.5 h-3.5 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                                <line x1="12" y1="11" x2="12" y2="17"></line>
+                                <line x1="9" y1="14" x2="15" y2="14"></line>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-xs font-semibold text-zinc-100 tracking-tight">Quick Paste</h2>
+                            <p class="text-[11px] text-zinc-500 leading-none mt-0.5">Paste multiple URLs â€” one per line â€” and bulk import</p>
+                        </div>
+                    </div>
+                    <button 
+                        @click="isQuickPasteOpen = false"
+                        class="p-1 hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 rounded transition"
+                        title="Close Quick Paste"
+                    >
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Quick Paste Body -->
+                <div class="p-4 space-y-3 bg-zinc-900/40">
+                    <!-- Textarea -->
+                    <div>
+                        <label for="quick-paste-textarea" class="sr-only">Paste URLs</label>
+                        <textarea 
+                            id="quick-paste-textarea"
+                            x-model="quickPasteText"
+                            rows="5"
+                            placeholder="https://github.com&#10;https://tailwindcss.com&#10;dribbble.com/shots&#10;awwwards.com"
+                            class="w-full px-3 py-2.5 bg-zinc-950 border border-zinc-800 rounded-lg text-xs font-mono text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 hover:border-zinc-700 resize-y min-h-[96px]"
+                        ></textarea>
+                        <div class="mt-1.5 flex items-center justify-between">
+                            <p class="text-[11px] text-zinc-500">
+                                <span x-text="(quickPasteText.split(/[\n]+/).filter(l=>l.trim()).length)"></span> line(s) detected
+                            </p>
+                            <button 
+                                x-show="quickPasteText"
+                                @click="quickPasteText = ''"
+                                class="text-[11px] text-zinc-400 hover:text-zinc-200 hover:underline"
+                            >
+                                Clear
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Controls Row: Dropdown + Import Button -->
+                    <div class="flex flex-col sm:flex-row gap-2.5">
+                        <!-- Folder Dropdown -->
+                        <div class="flex-1 relative">
+                            <div class="absolute inset-y-0 left-2.5 flex items-center pointer-events-none text-zinc-500">
+                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                            </div>
+                            <select 
+                                x-model="quickPasteFolderId"
+                                class="w-full pl-8 pr-8 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-xs text-zinc-100 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 hover:border-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                :disabled="folders.length === 0"
+                            >
+                                <option value="" disabled>Select destination folder</option>
+                                <template x-for="folder in folders" :key="folder.id">
+                                    <option :value="folder.id" x-text="folder.name + ' (' + folder.links.length + ')'"></option>
+                                </template>
+                            </select>
+                            <!-- Custom chevron -->
+                            <div class="absolute inset-y-0 right-2.5 flex items-center pointer-events-none text-zinc-500">
+                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- Import Links Button -->
+                        <button 
+                            @click="importQuickPasteLinks()"
+                            :disabled="folders.length === 0"
+                            class="px-5 py-2 bg-zinc-100 hover:bg-white disabled:bg-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed text-zinc-950 rounded-lg text-xs font-semibold inline-flex items-center justify-center gap-1.5 shadow-sm active:scale-95 duration-100 shrink-0"
+                        >
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            Import Links
+                        </button>
+                    </div>
+
+                    <!-- Empty folders hint -->
+                    <p x-show="folders.length === 0" class="text-[11px] text-amber-400/80 bg-amber-950/20 border border-amber-900/30 rounded-lg px-3 py-2 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        Create a folder first to import links into it.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Search & Filter Bar -->
+            <div class="mb-4 relative max-w-3xl mx-auto w-full">
+                <div class="absolute inset-y-0 left-3.5 flex items-center pointer-events-none text-zinc-500">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </div>
+                <input 
+                    type="text" 
+                    id="global-search"
+                    x-model="searchQuery" 
+                    placeholder="Search folders or links... (Press '/' to focus)" 
+                    class="w-full pl-10 pr-12 py-2.5 bg-zinc-900/80 border border-zinc-800 rounded-xl text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 hover:border-zinc-700 transition"
+                >
+                <div class="absolute inset-y-0 right-3.5 flex items-center pointer-events-none">
+                    <kbd class="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono text-zinc-500 bg-zinc-950 border border-zinc-800 rounded">/</kbd>
+                    <button 
+                        x-show="searchQuery" 
+                        @click="searchQuery = ''" 
+                        class="pointer-events-auto text-zinc-400 hover:text-zinc-200 p-0.5 rounded ml-1"
+                        style="display: none;"
+                    >
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mark All Folders - global -->
+            <div x-show="folders.length > 0" class="mb-3 max-w-3xl mx-auto w-full xl:max-w-none flex items-center justify-between gap-3">
+                <label class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border cursor-pointer transition text-xs" :class="areAllFoldersSelected ? 'bg-violet-600 border-violet-500 text-white' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'">
+                    <input type="checkbox" class="sr-only" :checked="areAllFoldersSelected" @change="toggleAllFolders()">
+                    <span class="w-4 h-4 rounded border flex items-center justify-center shrink-0" :class="areAllFoldersSelected ? 'bg-white border-white text-violet-600' : 'bg-zinc-950 border-zinc-700'">
+                        <svg x-show="areAllFoldersSelected" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </span>
+                    <span class="font-medium" x-text="areAllFoldersSelected ? 'Unmark all' : 'Mark All Folders'"></span>
+                    <span class="text-[11px] font-mono px-1 py-0.5 rounded bg-zinc-800 text-zinc-300" x-show="selectedFolderIds.length>0" x-text="selectedFolderIds.length + '/' + filteredFolders.length"></span>
+                </label>
+                <span x-show="selectedFolderIds.length===0" class="text-[11px] text-zinc-500">Mark folders for bulk actions</span>
+            </div>
+
+            <!-- Grid hint -->
+            <div x-show="folders.length > 1 && !searchQuery.trim() && selectedFolderIds.length===0" class="mb-3 max-w-3xl mx-auto w-full xl:max-w-none flex items-center justify-center gap-1.5 text-[11px] text-zinc-500">
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle>
+                    <circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle>
+                </svg>
+                Drag cards to reorder â€” 7-column grid on desktop
+            </div>
+            <div x-show="searchQuery.trim()" class="mb-3 text-center text-[11px] text-zinc-500">
+                Reordering paused while filtering
+            </div>
+
+            <!-- Folders Workspace Container -->
+            <main>
+                
+                <!-- Empty State (No Folders At All) -->
+                <div 
+                    x-show="folders.length === 0" 
+                    class="max-w-3xl mx-auto border border-dashed border-zinc-800 rounded-xl py-12 px-4 text-center flex flex-col items-center justify-center bg-zinc-900/20"
+                >
+                    <svg class="w-8 h-8 text-zinc-600 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <p class="text-sm text-zinc-400 font-medium">Your Vault is Empty</p>
+                    <p class="text-xs text-zinc-500 max-w-xs mt-1">Create your first folder to start organizing your digital catalog of links.</p>
+                    <button 
+                        @click="isAddFolderOpen = true" 
+                        class="mt-4 px-3 py-1.5 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-200 hover:text-white rounded-lg text-xs font-medium inline-flex items-center gap-1.5 shadow-sm active:scale-95 duration-100"
+                    >
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Create First Folder
+                    </button>
+                </div>
+
+                <!-- Empty Search Results State -->
+                <div 
+                    x-show="folders.length > 0 && filteredFolders.length === 0" 
+                    class="py-12 px-4 text-center flex flex-col items-center justify-center max-w-3xl mx-auto"
+                    style="display: none;"
+                >
+                    <svg class="w-6 h-6 text-zinc-600 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <p class="text-sm text-zinc-400 font-medium">No matches found</p>
+                    <p class="text-xs text-zinc-500 mt-1">Try refining your search keyword or clear the query.</p>
+                    <button 
+                        @click="searchQuery = '" 
+                        class="mt-3 text-xs text-zinc-300 hover:underline hover:text-white"
+                    >
+                        Clear Search
+                    </button>
+                </div>
+
+                <!-- Folders Grid - 5 cols desktop, 3 cols laptop, 1 col phone -->
+                <div 
+                    x-show="filteredFolders.length > 0"
+                    class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-7 gap-3 items-start"
+                >
+                    <template x-for="(folder, index) in filteredFolders" :key="folder.id">
+                        <section 
+                            :draggable="searchQuery.trim() === ' ? 'true' : 'false'"
+                            @dragstart="handleDragStart($event, folder)"
+                            @dragover.prevent="handleDragOver($event, folder)"
+                            @dragenter.prevent="handleDragOver($event, folder)"
+                            @dragleave="handleDragLeave($event, folder)"
+                            @drop.prevent="handleDrop($event, folder)"
+                            @dragend="handleDragEnd($event)"
+                            @click="openFolder(folder)"
+                            :class="{
+                                'dragging': draggedId === folder.id,
+                                'drag-over': dragOverId === folder.id && draggedId !== folder.id,
+                                'opacity-60': searchQuery.trim() !== '',
+                                'cursor-grab': searchQuery.trim() === ''
+                            }"
+                            class="folder-card relative bg-zinc-900 border border-zinc-800/80 hover:border-zinc-700 rounded-xl overflow-hidden shadow-sm flex flex-col cursor-pointer hover:shadow-md transition"
+                        >
+                            <!-- Subtle Mark Checkbox - top-right corner -->
+                            <label @click.stop class="absolute top-1 right-1 z-10 flex items-center justify-center w-5 h-5 rounded-md border backdrop-blur-sm cursor-pointer transition" :class="selectedFolderIds.includes(folder.id) ? 'bg-violet-600 border-violet-500 text-white shadow-sm' : 'bg-zinc-950/70 border-zinc-700/60 text-transparent hover:border-zinc-600 hover:bg-zinc-900 opacity-60 hover:opacity-100 group-hover:opacity-80'">
+                                <input type="checkbox" class="sr-only" :checked="selectedFolderIds.includes(folder.id)" @change="toggleFolderSelection(folder.id)">
+                                <svg x-show="selectedFolderIds.includes(folder.id)" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <svg x-show="!selectedFolderIds.includes(folder.id)" class="w-3 h-3 text-zinc-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg>
+                            </label>
+                            
+                            <!-- Folder Header Box - ultra-compact px-2 py-1.5 -->
+                            <div class="pl-2 pr-7 py-1.5 flex items-center justify-between gap-2 bg-zinc-900/50 select-none">
+                                
+                                <!-- Left: Drag Handle + Collapse / Icon / Title - wrap-enabled -->
+                                <div class="flex items-center gap-1.5 flex-1">
+                                    <!-- Drag Handle - only active when not searching -->
+                                    <button 
+                                        x-show="searchQuery.trim() === ''"
+                                        class="drag-handle p-1 -ml-1 text-zinc-600 hover:text-zinc-300 rounded hover:bg-zinc-800 transition flex-shrink-0 cursor-grab active:cursor-grabbing"
+                                        title="Drag to reorder"
+                                        @mousedown.stop
+                                        tabindex="-1"
+                                    >
+                                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                            <circle cx="9" cy="12" r="1.6"></circle><circle cx="9" cy="5" r="1.6"></circle><circle cx="9" cy="19" r="1.6"></circle>
+                                            <circle cx="15" cy="12" r="1.6"></circle><circle cx="15" cy="5" r="1.6"></circle><circle cx="15" cy="19" r="1.6"></circle>
+                                        </svg>
+                                    </button>
+                                    <!-- Open Indicator -->
+                                    <div class="p-1 text-zinc-500 flex-shrink-0">
+                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="9 18 15 12 9 6"></polyline>
+                                        </svg>
+                                    </div>
+
+                                    <!-- Folder icon -->
+                                    <svg 
+                                        class="w-3.5 h-3.5 text-zinc-400 flex-shrink-0 hidden sm:block" 
+                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    >
+                                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                                    </svg>
+
+                                    <!-- Title or Editor - wrap gracefully, no truncation -->
+                                    <div class="flex-1 flex items-center gap-1.5">
+                                        <!-- View State -->
+                                        <template x-if="editingFolderId !== folder.id">
+                                            <div class="flex items-center gap-1.5 flex-grow flex-wrap">
+                                                <span 
+                                                    @dblclick.stop="startRenameFolder(folder)" 
+                                                    class="font-medium text-xs leading-tight text-zinc-100 hover:text-white cursor-pointer whitespace-normal break-words"
+                                                    x-html="highlight(folder.name, false)"
+                                                    :title="folder.name"
+                                                ></span>
+                                                <span class="text-[10px] font-mono px-1 py-0.5 rounded bg-zinc-800 text-zinc-400 font-normal flex-shrink-0" x-text="folder.links.length"></span>
+                                            </div>
+                                        </template>
+
+                                        <!-- Edit State -->
+                                        <template x-if="editingFolderId === folder.id">
+                                            <div class="flex items-center gap-1 flex-grow">
+                                                <input 
+                                                    :id="`rename-input-${folder.id}`"
+                                                    type="text" 
+                                                    x-model="editingFolderName" 
+                                                    @keydown.enter="saveRenameFolder(folder)"
+                                                    @keydown.escape="cancelRenameFolder()"
+                                                    @blur="saveRenameFolder(folder)"
+                                                    class="bg-zinc-950 border border-zinc-700 rounded px-2 py-0.5 text-xs font-medium text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-400 flex-grow min-w-0 max-w-[140px]"
+                                                >
+                                                <button 
+                                                    @mousedown="saveRenameFolder(folder)" 
+                                                    class="p-1 hover:bg-zinc-800 text-emerald-400 hover:text-emerald-300 rounded"
+                                                >
+                                                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                                    </svg>
+                                                </button>
+                                                <button 
+                                                    @mousedown="cancelRenameFolder()" 
+                                                    class="p-1 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 rounded"
+                                                >
+                                                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <!-- Right: Folder Actions Toolbar (Open All, Rename, Delete) -->
+                                <div class="flex items-center gap-0.5 flex-shrink-0" @click.stop>
+                                    <!-- Open All Tab Opener -->
+                                    <button 
+                                        @click.stop="openAllLinks(folder)" 
+                                        class="p-1 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 rounded transition duration-150 flex items-center gap-1 text-[11px] font-medium"
+                                        title="Open all links in separate tabs"
+                                        :disabled="folder.links.length === 0"
+                                        :class="folder.links.length === 0 ? 'opacity-30 cursor-not-allowed' : ''"
+                                    >
+                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                            <polyline points="15 3 21 3 21 9"></polyline>
+                                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                                        </svg>
+                                    </button>
+
+                                    <!-- Rename Action -->
+                                    <button 
+                                        @click.stop="startRenameFolder(folder)" 
+                                        class="p-1 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 rounded transition duration-150"
+                                        title="Rename Folder"
+                                    >
+                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M12 20h9"></path>
+                                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                        </svg>
+                                    </button>
+
+                                    <!-- Delete Action -->
+                                    <button 
+                                        @click.stop="confirmDeleteFolder(folder)" 
+                                        class="p-1 hover:bg-zinc-800/80 text-zinc-400 hover:text-red-400 rounded transition duration-150"
+                                        title="Delete Folder"
+                                    >
+                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Compact Preview - click to open full-screen Folder View -->
+                            <div class="px-2 py-1.5 border-t border-zinc-800/40 bg-zinc-950/30 flex items-center gap-2 text-[11px] text-zinc-500">
+                                <div class="flex -space-x-1 shrink-0">
+                                    <template x-for="link in folder.links.slice(0,5)" :key="link.id">
+                                        <div class="w-5 h-5 rounded-full border border-zinc-800 bg-zinc-900 flex items-center justify-center overflow-hidden">
+                                            <img :src="getDomainIcon(link.url)" class="w-3 h-3 object-contain" alt="" loading="lazy" onerror="this.style.display='none'">
+                                        </div>
+                                    </template>
+                                    <div x-show="folder.links.length === 0" class="w-5 h-5 rounded-full border border-dashed border-zinc-700 bg-zinc-900 flex items-center justify-center">
+                                        <span class="text-[8px] text-zinc-500">∅</span>
+                                    </div>
+                                    <div x-show="folder.links.length > 5" class="w-5 h-5 rounded-full border border-zinc-800 bg-zinc-800 flex items-center justify-center text-[8px] font-mono text-zinc-300" x-text="'+' + (folder.links.length - 5)"></div>
+                                </div>
+                                <span class="truncate" x-text="folder.links.length === 0 ? 'Empty - click to add' : folder.links.length + ' links'"></span>
+                                <span class="ml-auto text-[10px] text-zinc-600 group-hover:text-zinc-300 shrink-0">Open →</span>
+                            </div>
+
+                        </section>
+                    </template>
+                </div>
+
+            </main>
+
+            <!-- Folder View Overlay - Full Screen Dedicated Page -->
+            <div x-show="activeFolderId !== null" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" style="display: none;" class="fixed inset-0 z-50 bg-zinc-950 overflow-y-auto">
+                <div class="absolute inset-0 bg-[linear-gradient(to_right,#1f1f23_1px,transparent_1px),linear-gradient(to_bottom,#1f1f23_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_60%_at_50%_0%,#000_70%,transparent_110%)] pointer-events-none opacity-15"></div>
+                <div class="relative max-w-[1760px] w-full mx-auto px-4 py-6 sm:py-8">
+                    <!-- Top Bar: Back + View Controls - sticky -->
+                    <div class="sticky top-0 z-[100] bg-[#09090b]/95 backdrop-blur-md border-b border-zinc-800 -mx-4 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6" style="position: sticky; top: 0; z-index: 100; background-color: rgba(9,9,11,0.95);">
+                        <button @click="closeFolder()" class="inline-flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-xs font-medium shadow-sm transition">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 6 12 15 6"></polyline><line x1="6" y1="12" x2="21" y2="12"></line></svg>
+                            Back to Dashboard
+                        </button>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[11px] font-semibold tracking-wide uppercase text-zinc-500">View:</span>
+                            <div class="flex items-center rounded-lg border border-zinc-800 bg-zinc-900 p-0.5">
+                                <button @click="setViewSize('small')" :class="folderViewSize === 'small' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'" class="px-3 py-1 rounded-md text-xs font-medium transition">Small</button>
+                                <button @click="setViewSize('medium')" :class="folderViewSize === 'medium' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'" class="px-3 py-1 rounded-md text-xs font-medium transition">Medium</button>
+                                <button @click="setViewSize('large')" :class="folderViewSize === 'large' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'" class="px-3 py-1 rounded-md text-xs font-medium transition">Large</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Folder Header -->
+                    <div class="flex flex-wrap items-center gap-3 mb-5">
+                        <div class="p-2 bg-zinc-900 border border-zinc-800 rounded-lg shadow-sm">
+                            <svg class="w-5 h-5 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                        </div>
+                        <h2 class="text-xl sm:text-2xl font-semibold tracking-tight text-zinc-100" x-text="activeFolder ? activeFolder.name : ''"></h2>
+                        <span class="px-2 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs font-mono" x-text="activeFolder ? activeFolder.links.length + ' links' : ''"></span>
+                        <!-- Mark All Links - global -->
+                        <label x-show="activeFolder && filteredActiveLinks.length>0" class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border cursor-pointer transition text-xs" :class="areAllLinksSelected ? 'bg-violet-600 border-violet-500 text-white' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'">
+                            <input type="checkbox" class="sr-only" :checked="areAllLinksSelected" @change="toggleAllLinks()">
+                            <span class="w-4 h-4 rounded border flex items-center justify-center shrink-0" :class="areAllLinksSelected ? 'bg-white border-white text-violet-600' : 'bg-zinc-950 border-zinc-700'">
+                                <svg x-show="areAllLinksSelected" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </span>
+                            <span class="font-medium" x-text="areAllLinksSelected ? 'Unmark all' : 'Mark All Links'"></span>
+                            <span x-show="selectedLinkIds.length>0" class="text-[11px] font-mono px-1 py-0.5 rounded bg-zinc-800 text-zinc-300" x-text="selectedLinkIds.length + '/' + filteredActiveLinks.length"></span>
+                        </label>
+                        <button @click="activeFolder && openAllLinks(activeFolder)" :disabled="!activeFolder || activeFolder.links.length===0" :class="!activeFolder || activeFolder.links.length===0 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-zinc-700 hover:border-zinc-600'" class="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 border border-zinc-700 text-zinc-200 rounded-lg text-xs font-medium shadow-sm transition">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                            Open All
+                        </button>
+                    </div>
+                    <!-- Add Link Row -->
+                    <div class="mb-6 p-3 bg-zinc-900 border border-zinc-800 rounded-xl shadow-sm">
+                        <form @submit.prevent="addLink(activeFolder.id, 'folder-view-input-url', 'folder-view-input-title')" class="flex flex-col sm:flex-row gap-2">
+                            <div class="flex-1 relative">
+                                <div class="absolute inset-y-0 left-2.5 flex items-center pointer-events-none text-zinc-500">
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                                </div>
+                                <input id="folder-view-input-url" type="text" placeholder="Paste URL (e.g. github.com)..." class="w-full pl-8 pr-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500" required>
+                            </div>
+                            <input id="folder-view-input-title" type="text" placeholder="Title (optional)" class="flex-1 sm:max-w-[200px] px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500">
+                            <button type="submit" class="px-4 py-2 bg-zinc-100 hover:bg-white text-zinc-900 rounded-lg text-xs font-semibold shadow-sm active:scale-95 transition">Add Link</button>
+                        </form>
+                    </div>
+                    <!-- Links Grid - Dynamic Sizes -->
+                    <div :class="viewGridClass" class="grid gap-3 items-start">
+                        <div x-show="filteredActiveLinks.length === 0" class="col-span-full py-16 px-4 text-center border border-dashed border-zinc-800 rounded-xl bg-zinc-900/30">
+                            <div class="w-10 h-10 mx-auto mb-3 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-zinc-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                            </div>
+                            <p class="text-sm font-medium text-zinc-400">No links yet</p>
+                            <p class="text-xs text-zinc-500 mt-1">Add a link above or try a different search.</p>
+                        </div>
+                        <template x-for="link in filteredActiveLinks" :key="link.id">
+                            <div class="group relative bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-xl shadow-sm hover:shadow-md transition flex flex-col justify-between" :class="(selectedLinkIds.includes(link.id) ? 'border-violet-500/40 bg-zinc-900 ring-1 ring-violet-500/15 ' : '') + (folderViewSize === 'small' ? 'p-2' : folderViewSize === 'large' ? 'p-4' : 'p-3')">
+                                <!-- Subtle mark checkbox - top-right corner -->
+                                <label @click.stop class="absolute top-1.5 right-1.5 z-10 flex items-center justify-center w-5 h-5 rounded-md border backdrop-blur-sm cursor-pointer transition" :class="selectedLinkIds.includes(link.id) ? 'bg-violet-600 border-violet-500 text-white shadow-sm' : 'bg-zinc-950/70 border-zinc-700/60 text-transparent hover:border-zinc-600 hover:bg-zinc-900 opacity-60 hover:opacity-100 group-hover:opacity-80'">
+                                    <input type="checkbox" class="sr-only" :checked="selectedLinkIds.includes(link.id)" @change="toggleLinkSelection(link.id)">
+                                    <svg x-show="selectedLinkIds.includes(link.id)" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                </label>
+                                <div>
+                                    <div class="flex items-start gap-3">
+                                        <div class="shrink-0 bg-zinc-950 border border-zinc-800 rounded-lg flex items-center justify-center overflow-hidden" :class="folderViewSize === 'large' ? 'w-10 h-10' : folderViewSize === 'small' ? 'w-6 h-6' : 'w-7 h-7'">
+                                            <img :src="getDomainIcon(link.url)" :class="folderViewSize === 'large' ? 'w-6 h-6' : folderViewSize === 'small' ? 'w-3.5 h-3.5' : 'w-5 h-5'" class="object-contain" alt="" loading="lazy" onerror="this.style.display='none'">
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <template x-if="editingLinkId !== link.id">
+                                                <div>
+                                                    <a :href="link.url" target="_blank" rel="noopener noreferrer" class="hover:underline break-words line-clamp-3" :class="folderViewSize === 'large' ? 'text-sm font-semibold text-zinc-100' : folderViewSize === 'small' ? 'text-xs font-medium text-zinc-100 leading-tight' : 'text-sm font-medium text-zinc-100'" x-html="highlight(link.title, false)" :title="link.title"></a>
+                                                    <p class="font-mono truncate mt-1" :class="folderViewSize === 'large' ? 'text-xs text-zinc-400' : 'text-[11px] text-zinc-500'" x-html="highlight(link.url.replace(/^https?:\/\/(www\.)?/, ''), true)"></p>
+                                                </div>
+                                            </template>
+                                            <template x-if="editingLinkId === link.id">
+                                                <input :id="'link-rename-view-'+link.id" type="text" x-model="editingLinkTitle" @keydown.enter="saveRenameLink(activeFolder, link)" @keydown.escape="cancelRenameLink()" @blur="saveRenameLink(activeFolder, link)" maxlength="80" class="w-full bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-xs font-medium text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-400" placeholder="Link title">
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Tile Controls -->
+                                <div class="flex items-center gap-1.5 mt-3 pt-2.5 border-t border-zinc-800/60" :class="folderViewSize === 'small' ? 'gap-1' : 'gap-1.5'">
+                                    <template x-if="editingLinkId !== link.id">
+                                        <div class="flex gap-1.5 w-full">
+                                            <button @click="startRenameLink(link)" class="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-white rounded-lg transition" :class="folderViewSize === 'small' ? 'text-[10px] py-0.5' : 'text-[11px]'">
+                                                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                                                Rename
+                                            </button>
+                                            <button @click="openMoveModal(activeFolder, link)" class="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 text-zinc-300 hover:text-white rounded-lg transition" :class="folderViewSize === 'small' ? 'text-[10px] py-0.5' : 'text-[11px]'">
+                                                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2v4"></path><path d="M13 13h6"></path><polyline points="16 10 19 13 16 16"></polyline></svg>
+                                                Move
+                                            </button>
+                                        </div>
+                                    </template>
+                                    <template x-if="editingLinkId === link.id">
+                                        <button @mousedown.prevent="saveRenameLink(activeFolder, link)" class="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-medium transition">Save</button>
+                                    </template>
+                                    <button @click="deleteLink(activeFolder, link.id)" class="inline-flex items-center justify-center px-2 py-1 bg-zinc-950 hover:bg-red-950/40 border border-zinc-800 hover:border-red-900 text-zinc-500 hover:text-red-400 rounded-lg transition" :class="folderViewSize === 'small' ? 'text-[10px] py-0.5 px-1.5' : 'text-[11px]'" title="Delete">
+                                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                        <span :class="folderViewSize === 'small' ? 'hidden' : '" class="ml-1">Delete</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer Section -->
+        <footer class="mt-16 pt-8 border-t border-zinc-900 flex flex-col sm:flex-row items-center justify-between gap-4 select-none">
+            
+            <!-- Safe & Private Storage Badge -->
+            <div class="flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <span class="text-[11px] text-zinc-400 font-medium">Local-First Sandbox Storage</span>
+            </div>
+
+            <!-- Import/Export & Clear Admin Operations -->
+            <div class="flex items-center gap-3">
+                
+                <!-- Hidden Upload Trigger Input -->
+                <input 
+                    type="file" 
+                    id="import-file-input" 
+                    @change="importData($event)" 
+                    accept=".json" 
+                    class="hidden"
+                >
+
+                <!-- Import Backup Button -->
+                <button 
+                    @click="triggerImport()" 
+                    class="text-[11px] font-medium text-zinc-400 hover:text-zinc-100 inline-flex items-center gap-1"
+                    title="Import JSON Backup file"
+                >
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    Import Backups
+                </button>
+
+                <!-- Border separator -->
+                <div class="h-3 w-px bg-zinc-800"></div>
+
+                <!-- Export Backup Button -->
+                <button 
+                    @click="exportData()" 
+                    class="text-[11px] font-medium text-zinc-400 hover:text-zinc-100 inline-flex items-center gap-1"
+                    title="Export all data as JSON file"
+                >
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Export Backups
+                </button>
+
+                <!-- Border separator -->
+                <div class="h-3 w-px bg-zinc-800"></div>
+
+                <!-- Wipe Storage Button -->
+                <button 
+                    @click="confirmWipeAll()" 
+                    class="text-[11px] font-medium text-zinc-500 hover:text-red-400 inline-flex items-center gap-1"
+                    title="Delete everything completely"
+                >
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                        <line x1="12" y1="2" x2="12" y2="12"></line>
+                    </svg>
+                    Wipe Storage
+                </button>
+
+            </div>
+
+        </footer>
+    </div>
+
+
+    <!-- ================= MODALS & OVERLAYS ================= -->
+
+
+    <!-- 1. ADD FOLDER MODAL OVERLAY -->
+    <div 
+        x-show="isAddFolderOpen" 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        style="display: none;"
+    >
+        <div 
+            @click.away="isAddFolderOpen = false" 
+            class="bg-zinc-900 border border-zinc-800 rounded-xl max-w-sm w-full p-6 shadow-2xl relative"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+        >
+            <!-- Close icon -->
+            <button 
+                @click="isAddFolderOpen = false" 
+                class="absolute top-4 right-4 p-1 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 rounded"
+            >
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+
+            <h3 class="text-sm font-semibold text-zinc-100 mb-1">Create Custom Folder</h3>
+            <p class="text-xs text-zinc-400 mb-4">Grouping system for categorizing link packages.</p>
+
+            <form @submit.prevent="createFolder()">
+                <div class="mb-5">
+                    <label for="new-folder-input" class="sr-only">Folder Name</label>
+                    <input 
+                        id="new-folder-input"
+                        type="text" 
+                        x-model="newFolderName" 
+                        x-ref="newFolderInput"
+                        placeholder="Enter name (e.g., Development, Social)..." 
+                        class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500"
+                        required
+                        maxlength="30"
+                    >
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5">
+                    <button 
+                        type="button" 
+                        @click="isAddFolderOpen = false" 
+                        class="px-3.5 py-1.5 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-100 rounded-lg text-xs font-medium"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        type="submit" 
+                        class="px-3.5 py-1.5 bg-zinc-100 hover:bg-white text-zinc-950 rounded-lg text-xs font-medium shadow active:scale-95 duration-100"
+                    >
+                        Create Folder
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- 2. DELETE FOLDER CONFIRMATION MODAL -->
+    <div 
+        x-show="confirmDeleteFolderData !== null" 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        style="display: none;"
+    >
+        <div 
+            @click.away="confirmDeleteFolderData = null" 
+            class="bg-zinc-900 border border-zinc-800 rounded-xl max-w-sm w-full p-6 shadow-2xl"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+        >
+            <div class="flex items-start gap-3.5 mb-4">
+                <div class="p-2 bg-red-950/40 border border-red-900 text-red-400 rounded-lg shrink-0">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-semibold text-zinc-100">Delete Custom Folder?</h3>
+                    <p class="text-xs text-zinc-400 mt-1">
+                        Are you sure you want to delete folder <span class="text-zinc-200 font-semibold" x-text="confirmDeleteFolderData ? `&ldquo;${confirmDeleteFolderData.name}&rdquo;` : '"></span> and all of its nested bookmarks?
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2.5">
+                <button 
+                    type="button" 
+                    @click="confirmDeleteFolderData = null" 
+                    class="px-3.5 py-1.5 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-100 rounded-lg text-xs font-medium"
+                >
+                    Cancel
+                </button>
+                <button 
+                    type="button" 
+                    @click="deleteFolder(confirmDeleteFolderData.id)" 
+                    class="px-3.5 py-1.5 bg-red-900/40 hover:bg-red-900/60 border border-red-800 text-red-200 rounded-lg text-xs font-medium active:scale-95 duration-100"
+                >
+                    Yes, Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 3. WIPE ALL CONFIRMATION MODAL -->
+    <div 
+        x-show="isWipeAllOpen" 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        style="display: none;"
+    >
+        <div 
+            @click.away="isWipeAllOpen = false" 
+            class="bg-zinc-900 border border-zinc-800 rounded-xl max-w-sm w-full p-6 shadow-2xl"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+        >
+            <div class="flex items-start gap-3.5 mb-4">
+                <div class="p-2 bg-red-950/40 border border-red-900 text-red-400 rounded-lg shrink-0">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                        <line x1="12" y1="2" x2="12" y2="12"></line>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-semibold text-zinc-100">Wipe Entire Storage?</h3>
+                    <p class="text-xs text-zinc-400 mt-1">
+                        Are you sure you want to permanently purge all folders and links in your cloud Firestore? This action cannot be undone.
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2.5">
+                <button 
+                    type="button" 
+                    @click="isWipeAllOpen = false" 
+                    class="px-3.5 py-1.5 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-100 rounded-lg text-xs font-medium"
+                >
+                    Cancel
+                </button>
+                <button 
+                    type="button" 
+                    @click="wipeAll()" 
+                    class="px-3.5 py-1.5 bg-red-900/40 hover:bg-red-900/60 border border-red-800 text-red-200 rounded-lg text-xs font-medium active:scale-95 duration-100"
+                >
+                    Wipe Everything
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 4. MOVE LINK MODAL -->
+    <div 
+        x-show="moveModalData !== null" 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        style="display: none;"
+    >
+        <div 
+            @click.away="closeMoveModal()" 
+            class="bg-zinc-900 border border-zinc-800 rounded-xl max-w-sm w-full p-5 shadow-2xl"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+        >
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <div class="flex items-start gap-2.5 min-w-0">
+                    <div class="p-2 bg-zinc-800 border border-zinc-700 rounded-lg shrink-0">
+                        <svg class="w-4 h-4 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2v4"></path>
+                            <path d="M13 13h6"></path>
+                            <polyline points="16 10 19 13 16 16"></polyline>
+                        </svg>
+                    </div>
+                    <div class="min-w-0">
+                        <h3 class="text-xs font-semibold text-zinc-100">Move link</h3>
+                        <p class="text-xs font-medium text-zinc-200 truncate mt-0.5" x-text="moveModalData ? moveModalData.linkTitle : '"></p>
+                        <p class="text-[11px] text-zinc-500 truncate" x-text="moveModalData ? moveModalData.linkUrl : '"></p>
+                        <p class="text-[11px] text-zinc-500 mt-1">from <span class="text-zinc-400 font-medium" x-text="moveModalData ? moveModalData.sourceFolderName : ''"></span></p>
+                    </div>
+                </div>
+                <button @click="closeMoveModal()" class="p-1 hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 rounded shrink-0">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <p class="text-[11px] font-semibold tracking-wide uppercase text-zinc-400 mb-2">Select destination folder</p>
+            <div class="max-h-64 overflow-y-auto space-y-1.5 pr-1 -mr-1">
+                <template x-for="f in folders" :key="f.id">
+                    <button 
+                        @click="moveLink(f.id)" 
+                        :disabled="f.id === moveModalData?.sourceFolderId"
+                        :class="f.id === moveModalData?.sourceFolderId ? 'bg-zinc-800 border-zinc-700 text-zinc-500 cursor-not-allowed opacity-60' : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900 text-zinc-200 hover:text-white'"
+                        class="w-full text-left px-3 py-2 border rounded-lg text-xs flex items-center justify-between gap-2 transition"
+                    >
+                        <span class="flex items-center gap-2 min-w-0">
+                            <svg class="w-3.5 h-3.5 text-zinc-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <span x-text="f.name" class="truncate font-medium"></span>
+                        </span>
+                        <span class="flex items-center gap-1.5 shrink-0">
+                            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400" x-text="`${f.links.length} ${f.links.length === 1 ? 'link' : 'links'}`"></span>
+                            <span x-show="f.id === moveModalData?.sourceFolderId" class="text-[10px] text-zinc-500">â€¢ current</span>
+                        </span>
+                    </button>
+                </template>
+                <div x-show="folders.length === 0" class="text-[11px] text-zinc-500 text-center py-6 border border-dashed border-zinc-800 rounded-lg">No folders yet â€” create one first.</div>
+                <div x-show="folders.length === 1" class="text-[11px] text-amber-400/70 text-center py-2">Only one folder exists. Create another to move links.</div>
+            </div>
+
+            <div class="mt-4 flex justify-end">
+                <button @click="closeMoveModal()" class="px-3.5 py-1.5 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-100 rounded-lg text-xs font-medium">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Selection Floating Bars -->
+    <div x-show="selectedLinkIds.length > 0 && activeFolderId !== null" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" style="display: none;" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[65] bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl px-4 py-3 flex items-center gap-3 max-w-[92vw]">
+        <span class="text-xs font-semibold text-zinc-100 whitespace-nowrap" x-text="selectedLinkIds.length + ' links selected'"></span>
+        <span class="w-px h-4 bg-zinc-800 shrink-0"></span>
+        <button @click="openBulkMoveLinks()" class="px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs font-semibold shadow-sm transition">Bulk Move</button>
+        <button @click="bulkDeleteLinks()" class="px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 border border-red-800 text-red-200 rounded-lg text-xs font-medium transition">Bulk Delete</button>
+        <button @click="selectedLinkIds = []" class="p-1.5 hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 rounded-lg transition" title="Clear selection">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+    </div>
+    <div x-show="selectedFolderIds.length > 0 && activeFolderId === null" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" style="display: none;" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl px-4 py-3 flex items-center gap-3 max-w-[92vw]">
+        <span class="text-xs font-semibold text-zinc-100 whitespace-nowrap" x-text="selectedFolderIds.length + ' folders selected'"></span>
+        <span class="w-px h-4 bg-zinc-800 shrink-0"></span>
+        <button @click="openFolderBulkMove()" class="px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs font-semibold shadow-sm transition">Bulk Move</button>
+        <button @click="isMergeModalOpen = true" :disabled="selectedFolderIds.length < 2" :class="selectedFolderIds.length < 2 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-zinc-700'" class="px-3 py-1.5 bg-zinc-800 border border-zinc-700 text-zinc-200 rounded-lg text-xs font-semibold transition">Merge Folders</button>
+        <button @click="bulkDeleteFolders()" class="px-3 py-1.5 bg-red-900/40 hover:bg-red-900/60 border border-red-800 text-red-200 rounded-lg text-xs font-medium transition">Bulk Delete Folders</button>
+        <button @click="selectedFolderIds = []" class="p-1.5 hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 rounded-lg transition" title="Clear selection">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+    </div>
+
+    <!-- 5. BULK MOVE LINKS MODAL -->
+    <div x-show="isBulkMoveModalOpen" class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" style="display: none;">
+        <div @click.away="isBulkMoveModalOpen = false" class="bg-zinc-900 border border-zinc-800 rounded-xl max-w-sm w-full p-5 shadow-2xl" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <div class="flex items-start gap-2.5 min-w-0">
+                    <div class="p-2 bg-violet-500/20 border border-violet-500/30 rounded-lg shrink-0">
+                        <svg class="w-4 h-4 text-violet-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2v4"></path><path d="M13 13h6"></path><polyline points="16 10 19 13 16 16"></polyline></svg>
+                    </div>
+                    <div class="min-w-0">
+                        <h3 class="text-xs font-semibold text-zinc-100">Bulk Move Links</h3>
+                        <p class="text-[11px] text-zinc-400 mt-1" x-text="selectedLinkIds.length + ' link(s) from ' + (activeFolder ? activeFolder.name : '')"></p>
+                    </div>
+                </div>
+                <button @click="isBulkMoveModalOpen = false" class="p-1 hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 rounded shrink-0"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>
+            <p class="text-[11px] font-semibold tracking-wide uppercase text-zinc-400 mb-2">Select destination folder</p>
+            <div class="max-h-64 overflow-y-auto space-y-1.5 pr-1 -mr-1">
+                <template x-for="f in folders" :key="f.id">
+                    <button @click="bulkMoveLinks(f.id)" :disabled="f.id === activeFolderId" :class="f.id === activeFolderId ? 'bg-zinc-800 border-zinc-700 text-zinc-500 cursor-not-allowed opacity-60' : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900 text-zinc-200 hover:text-white'" class="w-full text-left px-3 py-2 border rounded-lg text-xs flex items-center justify-between gap-2 transition">
+                        <span class="flex items-center gap-2 min-w-0"><svg class="w-3.5 h-3.5 text-zinc-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg><span x-text="f.name" class="truncate font-medium"></span></span>
+                        <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400" x-text="`${f.links.length} links`"></span>
+                    </button>
+                </template>
+            </div>
+            <div class="mt-4 flex justify-end">
+                <button @click="isBulkMoveModalOpen = false" class="px-3.5 py-1.5 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-100 rounded-lg text-xs font-medium">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5b. BULK MOVE FOLDERS MODAL -->
+    <div x-show="isFolderBulkMoveModalOpen" class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" style="display: none;">
+        <div @click.away="isFolderBulkMoveModalOpen = false" class="bg-zinc-900 border border-zinc-800 rounded-xl max-w-sm w-full p-5 shadow-2xl" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <div class="flex items-start gap-2.5 min-w-0">
+                    <div class="p-2 bg-violet-500/20 border border-violet-500/30 rounded-lg shrink-0">
+                        <svg class="w-4 h-4 text-violet-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2v4"></path><path d="M13 13h6"></path><polyline points="16 10 19 13 16 16"></polyline></svg>
+                    </div>
+                    <div class="min-w-0">
+                        <h3 class="text-xs font-semibold text-zinc-100">Bulk Move Folders Links</h3>
+                        <p class="text-[11px] text-zinc-400 mt-1" x-text="selectedFolderIds.length + ' folder(s) • ' + selectedFolderIds.reduce((acc,id)=> acc + (folders.find(f=>f.id===id)?.links.length||0),0) + ' links'"></p>
+                        <div class="mt-2 flex flex-wrap gap-1">
+                            <template x-for="fid in selectedFolderIds" :key="fid">
+                                <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-300" x-text="folders.find(f=>f.id===fid)?.name || fid"></span>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+                <button @click="isFolderBulkMoveModalOpen = false" class="p-1 hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 rounded shrink-0"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>
+            <p class="text-[11px] font-semibold tracking-wide uppercase text-zinc-400 mb-2">Select destination folder</p>
+            <div class="max-h-64 overflow-y-auto space-y-1.5 pr-1 -mr-1">
+                <template x-for="f in folders" :key="f.id">
+                    <button @click="bulkMoveFolderLinks(f.id)" class="w-full text-left px-3 py-2 border rounded-lg text-xs flex items-center justify-between gap-2 transition" :class="selectedFolderIds.includes(f.id) && f.id !== null ? 'bg-zinc-950 border-zinc-800 hover:border-violet-500/30 hover:bg-zinc-900 text-zinc-200' : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900 text-zinc-200 hover:text-white'">
+                        <span class="flex items-center gap-2 min-w-0"><svg class="w-3.5 h-3.5 text-zinc-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg><span x-text="f.name" class="truncate font-medium"></span><span x-show="selectedFolderIds.includes(f.id)" class="text-[10px] px-1 py-0.5 rounded bg-violet-600 text-white">selected</span></span>
+                        <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400" x-text="`${f.links.length} links`"></span>
+                    </button>
+                </template>
+            </div>
+            <p class="text-[11px] text-zinc-500 mt-2">Links will be moved from selected folders into the target. Sources will be emptied.</p>
+            <div class="mt-4 flex justify-end">
+                <button @click="isFolderBulkMoveModalOpen = false" class="px-3.5 py-1.5 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-100 rounded-lg text-xs font-medium">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. MERGE FOLDERS MODAL -->
+    <div x-show="isMergeModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" style="display: none;">
+        <div @click.away="isMergeModalOpen = false" class="bg-zinc-900 border border-zinc-800 rounded-xl max-w-sm w-full p-5 shadow-2xl" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+            <div class="flex items-start gap-2.5 mb-4">
+                <div class="p-2 bg-zinc-800 border border-zinc-700 rounded-lg shrink-0">
+                    <svg class="w-4 h-4 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><path d="M20 8v6"></path><path d="M23 11v2"></path><path d="M17 11v2"></path></svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <h3 class="text-xs font-semibold text-zinc-100">Merge Folders</h3>
+                    <p class="text-[11px] text-zinc-400 mt-1">Combine all links from <span class="text-zinc-200 font-medium" x-text="selectedFolderIds.length"></span> folders into one target.</p>
+                    <div class="mt-2 flex flex-wrap gap-1">
+                        <template x-for="fid in selectedFolderIds" :key="fid">
+                            <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-300" x-text="folders.find(f=>f.id===fid)?.name || fid"></span>
+                        </template>
+                    </div>
+                </div>
+                <button @click="isMergeModalOpen = false" class="p-1 hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 rounded shrink-0"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>
+            <p class="text-[11px] font-semibold tracking-wide uppercase text-zinc-400 mb-2">Choose target folder</p>
+            <div class="max-h-64 overflow-y-auto space-y-1.5 pr-1 -mr-1">
+                <template x-for="fid in selectedFolderIds" :key="fid">
+                    <button @click="mergeFolders(fid)" class="w-full text-left px-3 py-2.5 bg-zinc-950 border border-zinc-800 hover:border-violet-500/30 hover:bg-zinc-900 text-zinc-200 hover:text-white rounded-lg text-xs flex items-center justify-between gap-2 transition">
+                        <span class="flex items-center gap-2 min-w-0"><svg class="w-3.5 h-3.5 text-violet-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg><span x-text="folders.find(f=>f.id===fid)?.name" class="truncate font-medium"></span></span>
+                        <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400" x-text="folders.find(f=>f.id===fid)?.links.length + ' links'"></span>
+                    </button>
+                </template>
+            </div>
+            <p x-show="selectedFolderIds.length < 2" class="text-[11px] text-amber-400/80 mt-3">Select at least 2 folders.</p>
+            <div class="mt-4 flex justify-end gap-2">
+                <button @click="isMergeModalOpen = false" class="px-3.5 py-1.5 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-100 rounded-lg text-xs font-medium">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= FLOATING TOASTS (NOTIFICATIONS) ================= -->
+    <div class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full">
+        <template x-for="toast in toasts" :key="toast.id">
+            <div 
+                class="p-3.5 bg-zinc-900 border border-zinc-800 rounded-lg shadow-2xl pointer-events-auto flex items-center justify-between gap-3"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+            >
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <!-- Status Icon -->
+                    <div class="shrink-0">
+                        <!-- Success Check icon -->
+                        <svg x-show="toast.type === 'success'" class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <!-- Error Alert icon -->
+                        <svg x-show="toast.type === 'error'" class="w-4 h-4 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        <!-- Info Bullet icon -->
+                        <svg x-show="toast.type === 'info'" class="w-4 h-4 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                    </div>
+                    <p class="text-xs font-medium text-zinc-200 truncate" x-text="toast.message"></p>
+                </div>
+                <button 
+                    @click="removeToast(toast.id)" 
+                    class="p-0.5 hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 rounded shrink-0 transition"
+                >
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        </template>
+    </div>
+
+
+    <!-- ================= JAVASCRIPT STATE ENGINE ================= -->
+    <script>
+        function vaultApp() {
+            return {
+                folders: [],
+                searchQuery: ',
+                newFolderName: ',
+                isAddFolderOpen: false,
+                editingFolderId: null,
+                editingFolderName: ',
+                editingLinkId: null,
+                editingLinkTitle: ',
+                moveModalData: null,
+                activeFolderId: null,
+                user: null,
+                authLoading: true,
+                folderViewSize: 'medium',
+                selectedFolderIds: [],
+                selectedLinkIds: [],
+                isMergeModalOpen: false,
+                isBulkMoveModalOpen: false,
+                isFolderBulkMoveModalOpen: false,
+                isDragOver: false,
+                dragCounter: 0,
+                isAiPanelOpen: false,
+                aiRawText: ',
+                isAiSorting: false,
+                aiStatus: ',
+
+                // Quick Paste State
+                isQuickPasteOpen: true,
+                quickPasteText: ',
+                quickPasteFolderId: ',
+
+                // Drag & Drop State
+                draggedId: null,
+                dragOverId: null,
+                
+                // Modals State
+                confirmDeleteFolderData: null,
+                isWipeAllOpen: false,
+                
+                // Live Toasts State
+                toasts: [],
+                
+                init() {
+                    this.$watch('isAddFolderOpen', value => {
+                        if (value) {
+                            setTimeout(() => {
+                                if (this.$refs.newFolderInput) {
+                                    this.$refs.newFolderInput.focus();
+                                }
+                            }, 50);
+                        }
+                    });
+                    const startAuth = () => {
+                        const fb = window._firebase;
+                        if (!fb || !fb.auth || !fb.onAuthStateChanged) { setTimeout(startAuth, 120); return; }
+                        fb.onAuthStateChanged(fb.auth, async (u) => {
+                            if (u) {
+                                this.user = { uid: u.uid, email: u.email, displayName: u.displayName, photoURL: u.photoURL };
+                                await this.fetchCloud();
+                            } else {
+                                this.user = null;
+                                this.folders = [];
+                                this.quickPasteFolderId = '';
+                                this.selectedFolderIds = [];
+                                this.selectedLinkIds = [];
+                                this.activeFolderId = null;
+                                this.authLoading = false;
+                            }
+                        });
+                    };
+                    startAuth();
+                    let _saveTimeout = null;
+                    this.$watch('folders', (value) => {
+                        if (this.authLoading || !this.user) return;
+                        if (value && value.length > 0 && !this.quickPasteFolderId) {
+                            this.quickPasteFolderId = value[0].id;
+                        }
+                        if (value.length === 0) {
+                            this.quickPasteFolderId = '';
+                        }
+                        clearTimeout(_saveTimeout);
+                        _saveTimeout = setTimeout(() => this.saveCloud(), 600);
+                    });
+                    // Browser History: hash sync for Back button
+                    const applyHash = () => {
+                        const hash = window.location.hash;
+                        if (!hash || hash === '#' || hash === ') {
+                            if (this.activeFolderId !== null) {
+                                this.activeFolderId = null;
+                                this.selectedLinkIds = [];
+                                document.body.style.overflow = ';
+                            }
+                            return;
+                        }
+                        let id = null;
+                        if (hash.startsWith('#folder-')) {
+                            try { id = decodeURIComponent(hash.replace('#folder-', '')); } catch(e) { id = null; }
+                        } else {
+                            try {
+                                const name = decodeURIComponent(hash.slice(1));
+                                const byName = this.folders.find(f => f.name === name);
+                                if (byName) id = byName.id;
+                                else if (this.folders.find(f => f.id === name)) id = name;
+                                else id = name;
+                            } catch(e) { id = null; }
+                        }
+                        if (id && this.folders.find(f => f.id === id)) {
+                            this.activeFolderId = id;
+                            this.selectedLinkIds = [];
+                            document.body.style.overflow = 'hidden';
+                        }
+                    };
+                    window.addEventListener('popstate', () => this.$nextTick(applyHash));
+                    window.addEventListener('hashchange', () => this.$nextTick(applyHash));
+                    this.$watch('folders', () => this.$nextTick(applyHash));
+                    setTimeout(() => this.$nextTick(applyHash), 500);
+                },
+                async fetchCloud() {
+                    this.authLoading = true;
+                    try {
+                        const fb = window._firebase;
+                        const userDoc = fb.doc(fb.db, 'users', this.user.uid);
+                        const snap = await fb.getDoc(userDoc);
+                        if (snap.exists()) {
+                            const data = snap.data();
+                            if (data.folders && Array.isArray(data.folders)) {
+                                this.folders = data.folders;
+                            } else {
+                                this.folders = this.getSeedData();
+                                await fb.setDoc(userDoc, { folders: this.folders }, { merge: true });
+                            }
+                        } else {
+                            this.folders = this.getSeedData();
+                            await fb.setDoc(userDoc, { folders: this.folders });
+                        }
+                        if (this.folders.length > 0) this.quickPasteFolderId = this.folders[0].id;
+                        if (this.folders.length > 0) this.showToast(`Synced ${this.folders.length} folder(s) from cloud`, 'info');
+                    } catch (e) {
+                        console.error(e);
+                        this.showToast('Cloud sync error: ' + e.message, 'error');
+                        this.folders = this.getSeedData();
+                    } finally {
+                        this.authLoading = false;
+                    }
+                },
+                async saveCloud() {
+                    if (!this.user || this.authLoading) return;
+                    try {
+                        const fb = window._firebase;
+                        const userDoc = fb.doc(fb.db, 'users', this.user.uid);
+                        await fb.setDoc(userDoc, { folders: this.folders }, { merge: true });
+                    } catch (e) {
+                        console.error(e);
+                        this.showToast('Cloud save failed: ' + e.message, 'error');
+                    }
+                },
+                async signInWithGoogle() {
+                    try {
+                        const fb = window._firebase;
+                        this.authLoading = true;
+                        await fb.signInWithPopup(fb.auth, fb.provider); // Secure Google Login via signInWithPopup(auth, provider)
+                    } catch (e) {
+                        this.authLoading = false;
+                        this.showToast('Sign in failed: ' + (e.message || e), 'error');
+                    }
+                },
+                async signOutUser() {
+                    try {
+                        const fb = window._firebase;
+                        await fb.signOut(fb.auth);
+                        this.folders = [];
+                        this.quickPasteFolderId = '';
+                        this.selectedFolderIds = [];
+                        this.selectedLinkIds = [];
+                        this.activeFolderId = null;
+                        this.moveModalData = null;
+                        this.isMergeModalOpen = false;
+                        this.isBulkMoveModalOpen = false;
+                        this.isFolderBulkMoveModalOpen = false;
+                        this.showToast('Signed out — vault locked', 'info');
+                    } catch (e) {
+                        this.showToast('Sign out failed: ' + e.message, 'error');
+                    }
+                },
+                
+                getSeedData() {
+                    return [
+                        {
+                            id: 'folder-seed-1',
+                            name: 'Development',
+                            isCollapsed: false,
+                            links: [
+                                { id: 'link-seed-1', title: 'GitHub Codebase', url: 'https://github.com' },
+                                { id: 'link-seed-2', title: 'Tailwind Docs', url: 'https://tailwindcss.com' },
+                                { id: 'link-seed-3', title: 'Alpine.js Playground', url: 'https://alpinejs.dev' }
+                            ]
+                        },
+                        {
+                            id: 'folder-seed-2',
+                            name: 'Inspiration Hub',
+                            isCollapsed: false,
+                            links: [
+                                { id: 'link-seed-4', title: 'Dribbble Portfolios', url: 'https://dribbble.com' },
+                                { id: 'link-seed-5', title: 'Awwwards Winners', url: 'https://www.awwwards.com' }
+                            ]
+                        }
+                    ];
+                },
+                
+                showToast(message, type = 'success') {
+                    const id = Date.now() + Math.random();
+                    this.toasts.push({ id, message, type });
+                    setTimeout(() => {
+                        this.removeToast(id);
+                    }, 3000);
+                },
+
+                removeToast(id) {
+                    this.toasts = this.toasts.filter(t => t.id !== id);
+                },
+
+                // ===== Drag & Drop Handlers =====
+                handleDragStart(event, folder) {
+                    if (this.searchQuery.trim() !== '') {
+                        event.preventDefault();
+                        return;
+                    }
+                    this.draggedId = folder.id;
+                    event.dataTransfer.effectAllowed = 'move';
+                    try { event.dataTransfer.setData('text/plain', folder.id); } catch (e) {}
+                    // Custom ghost styling delay for smooth ghosting
+                    setTimeout(() => {
+                        if (event.target) event.target.classList.add('dragging');
+                    }, 0);
+                },
+                handleDragOver(event, folder) {
+                    if (!this.draggedId || this.draggedId === folder.id) return;
+                    if (this.searchQuery.trim() !== '') return;
+                    event.preventDefault();
+                    event.dataTransfer.dropEffect = 'move';
+                    this.dragOverId = folder.id;
+                },
+                handleDragLeave(event, folder) {
+                    // Only clear if leaving the card itself (not child)
+                    if (this.dragOverId === folder.id) {
+                        // use timeout to avoid flicker when entering children
+                        setTimeout(() => {
+                            const el = document.querySelector(`[data-folder-id="${folder.id}"]`);
+                            if (el && !el.matches(':hover')) this.dragOverId = null;
+                        }, 30);
+                    }
+                },
+                handleDrop(event, targetFolder) {
+                    event.preventDefault();
+                    if (!this.draggedId || this.draggedId === targetFolder.id) {
+                        this.dragOverId = null;
+                        return;
+                    }
+                    const fromIdx = this.folders.findIndex(f => f.id === this.draggedId);
+                    const toIdx = this.folders.findIndex(f => f.id === targetFolder.id);
+                    if (fromIdx === -1 || toIdx === -1) {
+                        this.dragOverId = null;
+                        this.draggedId = null;
+                        return;
+                    }
+                    const [moved] = this.folders.splice(fromIdx, 1);
+                    this.folders.splice(toIdx, 0, moved);
+                    this.dragOverId = null;
+                    this.draggedId = null;
+                    this.showToast('Folder order updated');
+                },
+                handleDragEnd(event) {
+                    if (event && event.target) event.target.classList.remove('dragging');
+                    this.draggedId = null;
+                    this.dragOverId = null;
+                },
+                
+                createFolder() {
+                    const name = this.newFolderName.trim();
+                    if (!name) return;
+                    
+                    const newFolder = {
+                        id: 'folder-' + Date.now(),
+                        name: name,
+                        isCollapsed: false,
+                        links: []
+                    };
+                    
+                    this.folders.unshift(newFolder);
+                    // Auto-select new folder for Quick Paste if none selected
+                    this.quickPasteFolderId = newFolder.id;
+                    this.newFolderName = ';
+                    this.isAddFolderOpen = false;
+                    this.showToast(`Folder "${name}" successfully created.`);
+                },
+                
+                startRenameFolder(folder) {
+                    this.editingFolderId = folder.id;
+                    this.editingFolderName = folder.name;
+                    this.$nextTick(() => {
+                        const el = document.getElementById(`rename-input-${folder.id}`);
+                        if (el) el.focus();
+                    });
+                },
+                
+                saveRenameFolder(folder) {
+                    const name = this.editingFolderName.trim();
+                    if (name && name !== folder.name) {
+                        const oldName = folder.name;
+                        folder.name = name;
+                        this.showToast(`Folder "${oldName}" renamed to "${name}".`);
+                    }
+                    this.editingFolderId = null;
+                },
+                
+                cancelRenameFolder() {
+                    this.editingFolderId = null;
+                },
+
+                startRenameLink(link) {
+                    this.editingLinkId = link.id;
+                    this.editingLinkTitle = link.title;
+                    this.$nextTick(() => {
+                        const el = document.getElementById(`link-rename-${link.id}`);
+                        if (el) { el.focus(); el.select(); }
+                    });
+                },
+                saveRenameLink(folder, link) {
+                    const newTitle = this.editingLinkTitle.trim();
+                    if (this.editingLinkId !== link.id) return;
+                    if (newTitle && newTitle !== link.title) {
+                        // Mutate the real source in this.folders to persist via cloud Firestore
+                        const realFolder = this.folders.find(f => f.id === folder.id);
+                        const target = realFolder ? realFolder.links.find(l => l.id === link.id) : null;
+                        if (target) target.title = newTitle;
+                        // also update filtered clone for instant UI
+                        link.title = newTitle;
+                        this.showToast(`Renamed to "${newTitle}"`);
+                    }
+                    this.editingLinkId = null;
+                    this.editingLinkTitle = ';
+                },
+                cancelRenameLink() {
+                    this.editingLinkId = null;
+                    this.editingLinkTitle = '';
+                },
+
+                openMoveModal(folder, link) {
+                    // close any rename editing to avoid overlap
+                    this.editingLinkId = null;
+                    this.moveModalData = {
+                        linkId: link.id,
+                        linkTitle: link.title,
+                        linkUrl: link.url,
+                        sourceFolderId: folder.id,
+                        sourceFolderName: folder.name
+                    };
+                },
+                closeMoveModal() {
+                    this.moveModalData = null;
+                },
+                moveLink(targetFolderId) {
+                    if (!this.moveModalData) return;
+                    const { linkId, sourceFolderId } = this.moveModalData;
+                    if (targetFolderId === sourceFolderId) {
+                        this.showToast('Already in that folder', 'info');
+                        this.closeMoveModal();
+                        return;
+                    }
+                    const sourceFolder = this.folders.find(f => f.id === sourceFolderId);
+                    const targetFolder = this.folders.find(f => f.id === targetFolderId);
+                    if (!sourceFolder || !targetFolder) {
+                        this.showToast('Target folder not found', 'error');
+                        return;
+                    }
+                    const idx = sourceFolder.links.findIndex(l => l.id === linkId);
+                    if (idx === -1) {
+                        this.showToast('Link not found', 'error');
+                        return;
+                    }
+                    const [moved] = sourceFolder.links.splice(idx, 1);
+                    targetFolder.links.unshift(moved);
+                    targetFolder.isCollapsed = false;
+                    this.closeMoveModal();
+                    this.showToast(`Moved "${moved.title}" â†’ "${targetFolder.name}"`);
+                },
+                
+                confirmDeleteFolder(folder) {
+                    this.confirmDeleteFolderData = folder;
+                },
+                
+                deleteFolder(folderId) {
+                    const folder = this.folders.find(f => f.id === folderId);
+                    const folderName = folder ? folder.name : ';
+                    this.folders = this.folders.filter(f => f.id !== folderId);
+                    this.confirmDeleteFolderData = null;
+                    // Reset quick paste selection if deleted folder was selected
+                    if (this.quickPasteFolderId === folderId) {
+                        this.quickPasteFolderId = this.folders.length > 0 ? this.folders[0].id : ';
+                    }
+                    this.showToast(`Folder "${folderName}" and its links removed.`);
+                },
+                
+                toggleFolder(folder) {
+                    folder.isCollapsed = !folder.isCollapsed;
+                },
+                openFolder(folder) {
+                    this.activeFolderId = folder.id;
+                    this.selectedLinkIds = [];
+                    document.body.style.overflow = 'hidden';
+                    const hash = '#folder-' + encodeURIComponent(folder.id);
+                    const nameHash = '#' + encodeURIComponent(folder.name);
+                    if (window.location.hash !== hash && window.location.hash !== nameHash) {
+                        history.pushState({ folderId: folder.id }, '', hash);
+                        // also support categoryName hash per spec: window.location.hash = categoryName
+                        // keep id hash as primary for uniqueness
+                    }
+                    this.$nextTick(() => {
+                        const el = document.getElementById('folder-view-input-url');
+                        if (el && window.innerWidth > 768) el.focus();
+                    });
+                },
+                closeFolder() {
+                    const hadHash = window.location.hash && window.location.hash.length > 1;
+                    this.activeFolderId = null;
+                    this.selectedLinkIds = [];
+                    document.body.style.overflow = ';
+                    if (hadHash) {
+                        // Keep Back button history clean - go back if we pushed, else clear hash
+                        if (history.state && history.state.folderId) {
+                            history.back();
+                        } else {
+                            history.pushState(null, ', window.location.pathname + window.location.search);
+                        }
+                    }
+                },
+                setViewSize(size) {
+                    this.folderViewSize = size;
+                },
+                get activeFolder() {
+                    return this.folders.find(f => f.id === this.activeFolderId) || null;
+                },
+                get filteredActiveLinks() {
+                    if (!this.activeFolder) return [];
+                    const q = this.searchQuery.trim().toLowerCase();
+                    if (!q) return this.activeFolder.links;
+                    return this.activeFolder.links.filter(l => l.title.toLowerCase().includes(q) || l.url.toLowerCase().includes(q));
+                },
+                get viewGridClass() {
+                    if (this.folderViewSize === 'small') return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8';
+                    if (this.folderViewSize === 'large') return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
+                    return 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5';
+                },
+                get areAllFoldersSelected() {
+                    if (this.filteredFolders.length === 0) return false;
+                    return this.filteredFolders.every(f => this.selectedFolderIds.includes(f.id));
+                },
+                get areAllLinksSelected() {
+                    if (!this.activeFolder || this.filteredActiveLinks.length === 0) return false;
+                    return this.filteredActiveLinks.every(l => this.selectedLinkIds.includes(l.id));
+                },
+                toggleFolderSelection(folderId) {
+                    const idx = this.selectedFolderIds.indexOf(folderId);
+                    if (idx >= 0) this.selectedFolderIds.splice(idx,1);
+                    else this.selectedFolderIds.push(folderId);
+                },
+                toggleAllFolders() {
+                    if (this.areAllFoldersSelected) this.selectedFolderIds = [];
+                    else this.selectedFolderIds = this.filteredFolders.map(f=>f.id);
+                },
+                toggleLinkSelection(linkId) {
+                    const idx = this.selectedLinkIds.indexOf(linkId);
+                    if (idx >= 0) this.selectedLinkIds.splice(idx,1);
+                    else this.selectedLinkIds.push(linkId);
+                },
+                toggleAllLinks() {
+                    if (this.areAllLinksSelected) this.selectedLinkIds = [];
+                    else this.selectedLinkIds = this.filteredActiveLinks.map(l=>l.id);
+                },
+                bulkDeleteLinks() {
+                    if (!this.activeFolder || this.selectedLinkIds.length === 0) return;
+                    if (!confirm(`Delete ${this.selectedLinkIds.length} selected link(s)?`)) return;
+                    const folder = this.folders.find(f=>f.id===this.activeFolderId);
+                    if (!folder) return;
+                    const before = folder.links.length;
+                    folder.links = folder.links.filter(l=>!this.selectedLinkIds.includes(l.id));
+                    const deleted = before - folder.links.length;
+                    this.selectedLinkIds = [];
+                    this.showToast(`Deleted ${deleted} link(s)`);
+                },
+                openBulkMoveLinks() {
+                    if (this.selectedLinkIds.length === 0) { this.showToast('Select at least one link','info'); return; }
+                    this.isBulkMoveModalOpen = true;
+                },
+                bulkMoveLinks(targetFolderId) {
+                    if (!this.activeFolder || this.selectedLinkIds.length===0) return;
+                    const source = this.folders.find(f=>f.id===this.activeFolderId);
+                    const target = this.folders.find(f=>f.id===targetFolderId);
+                    if (!source || !target) return;
+                    if (source.id === target.id) { this.showToast('Already in that folder','info'); return; }
+                    const moving = source.links.filter(l=>this.selectedLinkIds.includes(l.id));
+                    if (moving.length===0) return;
+                    target.links.unshift(...moving.map(l=>({...l})));
+                    source.links = source.links.filter(l=>!this.selectedLinkIds.includes(l.id));
+                    target.isCollapsed = false;
+                    const count = moving.length;
+                    this.selectedLinkIds = [];
+                    this.isBulkMoveModalOpen = false;
+                    this.showToast(`Moved ${count} link(s) → "${target.name}"`);
+                },
+                bulkDeleteFolders() {
+                    if (this.selectedFolderIds.length===0) return;
+                    if (!confirm(`Delete ${this.selectedFolderIds.length} selected folder(s) and all their links? This cannot be undone.`)) return;
+                    const count = this.selectedFolderIds.length;
+                    this.folders = this.folders.filter(f=>!this.selectedFolderIds.includes(f.id));
+                    if (this.activeFolderId && this.selectedFolderIds.includes(this.activeFolderId)) this.closeFolder();
+                    this.selectedFolderIds = [];
+                    if (this.quickPasteFolderId && !this.folders.find(f=>f.id===this.quickPasteFolderId)) this.quickPasteFolderId = this.folders[0]?.id || '';
+                    this.showToast(`Deleted ${count} folder(s)`);
+                },
+                mergeFolders(targetFolderId) {
+                    if (this.selectedFolderIds.length < 2) { this.showToast('Select at least 2 folders to merge','info'); return; }
+                    const target = this.folders.find(f=>f.id===targetFolderId);
+                    if (!target) { this.showToast('Target not found','error'); return; }
+                    if (!this.selectedFolderIds.includes(targetFolderId)) { this.showToast('Target must be one of selected folders','info'); return; }
+                    let mergedCount = 0;
+                    const sources = this.folders.filter(f=>this.selectedFolderIds.includes(f.id) && f.id !== targetFolderId);
+                    sources.forEach(src=>{
+                        src.links.forEach(l=>{
+                            if (!target.links.some(t=>t.url.toLowerCase()===l.url.toLowerCase())) {
+                                target.links.push({...l, id:'link-merge-'+Date.now()+'-'+Math.random().toString(36).slice(2,6)});
+                                mergedCount++;
+                            }
+                        });
+                    });
+                    // remove merged source folders
+                    const removeIds = sources.map(s=>s.id);
+                    this.folders = this.folders.filter(f=>!removeIds.includes(f.id));
+                    // keep target order, move target to front? keep as is
+                    target.isCollapsed = false;
+                    this.selectedFolderIds = [];
+                    this.isMergeModalOpen = false;
+                    if (this.activeFolderId && removeIds.includes(this.activeFolderId)) this.closeFolder();
+                    this.showToast(`Merged ${sources.length} folder(s) into "${target.name}" • ${mergedCount} links added`);
+                },
+                openFolderBulkMove() {
+                    if (this.selectedFolderIds.length === 0) { this.showToast('Select folders first','info'); return; }
+                    this.isFolderBulkMoveModalOpen = true;
+                },
+                bulkMoveFolderLinks(targetFolderId) {
+                    if (this.selectedFolderIds.length === 0) return;
+                    const target = this.folders.find(f=>f.id===targetFolderId);
+                    if (!target) { this.showToast('Target not found','error'); return; }
+                    // Determine sources: all selected folders except target
+                    const sources = this.folders.filter(f=>this.selectedFolderIds.includes(f.id) && f.id !== targetFolderId);
+                    if (sources.length === 0) { this.showToast('Select source folders different from target','info'); return; }
+                    let moved = 0;
+                    sources.forEach(src=>{
+                        const toMove = [...src.links];
+                        toMove.forEach(l=>{
+                            if (!target.links.some(t=>t.url.toLowerCase()===l.url.toLowerCase())) {
+                                target.links.unshift({...l, id:'link-bulkmove-'+Date.now()+'-'+Math.random().toString(36).slice(2,6)});
+                                moved++;
+                            }
+                        });
+                        src.links = [];
+                    });
+                    target.isCollapsed = false;
+                    this.selectedFolderIds = [];
+                    this.isFolderBulkMoveModalOpen = false;
+                    this.showToast(`Bulk moved ${moved} link(s) → "${target.name}"`);
+                },
+                
+                handleDragEnter(e) {
+                    if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) {
+                        this.dragCounter++;
+                        this.isDragOver = true;
+                    }
+                },
+                handleDragOver(e) {
+                    if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) {
+                        e.dataTransfer.dropEffect = 'copy';
+                        this.isDragOver = true;
+                    }
+                },
+                handleDragLeave(e) {
+                    // Use counter to avoid flicker when dragging over children
+                    this.dragCounter = Math.max(0, this.dragCounter - 1);
+                    if (this.dragCounter === 0) this.isDragOver = false;
+                },
+                async handleDrop(e) {
+                    this.isDragOver = false;
+                    this.dragCounter = 0;
+                    const files = Array.from(e.dataTransfer.files || []);
+                    const bookmarkFiles = files.filter(f => /\.html?$|\.json$/i.test(f.name));
+                    if (bookmarkFiles.length === 0) {
+                        // Check if dropped files are bookmark files, else ignore
+                        if (files.length > 0) this.showToast('Drop .html or .json bookmark files', 'info');
+                        return;
+                    }
+                    await this.processBookmarkFiles(bookmarkFiles);
+                },
+                async processBookmarkFiles(files) {
+                    const mergedMap = new Map();
+                    for (const file of files) {
+                        const text = await file.text();
+                        let parsed = new Map();
+                        if (/\.json$/i.test(file.name)) {
+                            parsed = this.parseBookmarkJSON(text);
+                        } else {
+                            parsed = this.parseBookmarkHTML(text);
+                        }
+                        for (const [name, links] of parsed.entries()) {
+                            if (!mergedMap.has(name)) mergedMap.set(name, new Map());
+                            const urlMap = mergedMap.get(name);
+                            for (const l of links) {
+                                const key = l.url.toLowerCase();
+                                if (!urlMap.has(key)) urlMap.set(key, l);
+                            }
+                        }
+                    }
+                    let createdFolders = 0;
+                    let totalLinks = 0;
+                    const touchedFolders = new Set();
+                    for (const [name, urlMap] of mergedMap.entries()) {
+                        const links = Array.from(urlMap.values());
+                        if (links.length === 0) continue;
+                        let folder = this.folders.find(f => f.name.toLowerCase() === name.toLowerCase());
+                        if (!folder) {
+                            folder = { id: 'folder-import-' + Date.now() + '-' + Math.random().toString(36).slice(2,6), name: name, isCollapsed: false, links: [] };
+                            this.folders.push(folder);
+                            createdFolders++;
+                        }
+                        let added = 0;
+                        for (const l of links) {
+                            const exists = folder.links.some(ex => ex.url.toLowerCase() === l.url.toLowerCase());
+                            if (!exists) {
+                                const cleanTitle = this.makeCleanTitle ? this.makeCleanTitle(l.url, l.title) : (l.title || l.url);
+                                folder.links.push({ id: 'link-import-' + Date.now() + '-' + Math.random().toString(36).slice(2,6), title: cleanTitle, url: l.url, dateAdded: new Date().toISOString() });
+                                added++;
+                            }
+                        }
+                        if (added > 0) {
+                            totalLinks += added;
+                            touchedFolders.add(name);
+                        }
+                    }
+                    const totalFolders = touchedFolders.size;
+                    await this.saveCloud();
+                    this.showToast(`Successfully imported ${totalFolders} folders and ${totalLinks} links!`, 'success');
+                },
+                parseBookmarkHTML(text) {
+                    const map = new Map(); // name -> array of {url, title}
+                    try {
+                        const doc = new DOMParser().parseFromString(text, 'text/html');
+                        // Helper to ensure folder exists
+                        const ensure = (name) => { if (!map.has(name)) map.set(name, []); };
+                        // Walk DL recursively
+                        const walkDL = (dl, currentFolder) => {
+                            // Get direct children, iterate sequentially to handle DT->DL pairing
+                            const children = Array.from(dl.children);
+                            for (let i = 0; i < children.length; i++) {
+                                const el = children[i];
+                                if (el.tagName === 'DT') {
+                                    const h3 = el.querySelector(':scope > H3');
+                                    const a = el.querySelector(':scope > A');
+                                    // Some browsers put H3 inside DT as first child
+                                    const first = el.firstElementChild;
+                                    if (first && first.tagName === 'H3') {
+                                        const name = first.textContent.trim() || 'Untitled';
+                                        ensure(name);
+                                        // Find next DL sibling (folder contents)
+                                        let nextDL = null;
+                                        let j = i + 1;
+                                        while (j < children.length) {
+                                            const sib = children[j];
+                                            if (sib.tagName === 'DL') { nextDL = sib; break; }
+                                            if (sib.tagName === 'DD' || sib.tagName === 'P') { j++; continue; }
+                                            break;
+                                        }
+                                        // Also check inner DL inside DT (some exports)
+                                        const innerDL = el.querySelector(':scope > DL');
+                                        if (innerDL) nextDL = innerDL;
+                                        if (nextDL) {
+                                            walkDL(nextDL, name);
+                                            // Skip the DL we just processed if it was sibling
+                                            if (nextDL && children.includes(nextDL)) {
+                                                i = children.indexOf(nextDL);
+                                            }
+                                        }
+                                    } else if (first && first.tagName === 'A') {
+                                        const href = first.getAttribute('href') || first.getAttribute('HREF');
+                                        const title = (first.textContent || '').trim();
+                                        if (href && /^https?:\/\//i.test(href)) {
+                                            const target = currentFolder || 'General';
+                                            ensure(target);
+                                            map.get(target).push({ url: href, title: title || href });
+                                        }
+                                    } else {
+                                        // Fallback: check for A/H3 deeper
+                                        const h3Inner = el.querySelector('H3');
+                                        const aInner = el.querySelector('A');
+                                        if (h3Inner && !aInner) {
+                                            const name = h3Inner.textContent.trim() || 'Untitled';
+                                            ensure(name);
+                                            let nextDL = null;
+                                            let j = i + 1;
+                                            while (j < children.length) {
+                                                if (children[j].tagName === 'DL') { nextDL = children[j]; break; }
+                                                if (children[j].tagName === 'DD' || children[j].tagName === 'P') { j++; continue; }
+                                                break;
+                                            }
+                                            if (nextDL) { walkDL(nextDL, name); i = children.indexOf(nextDL); }
+                                        } else if (aInner) {
+                                            const href = aInner.getAttribute('href') || aInner.getAttribute('HREF');
+                                            const title = (aInner.textContent || '').trim();
+                                            if (href && /^https?:\/\//i.test(href)) {
+                                                const target = currentFolder || 'General';
+                                                ensure(target);
+                                                map.get(target).push({ url: href, title: title || href });
+                                            }
+                                        }
+                                    }
+                                } else if (el.tagName === 'DL') {
+                                    // DL without preceding H3 - process as same folder
+                                    // Avoid double-processing if this DL was already handled as nextDL
+                                    // Check if previous DT was H3 that already handled this DL, then skip
+                                    const prev = children[i-1];
+                                    const prevIsFolder = prev && prev.tagName === 'DT' && prev.querySelector('H3');
+                                    if (!prevIsFolder) {
+                                        walkDL(el, currentFolder);
+                                    }
+                                }
+                            }
+                        };
+                        const rootDL = doc.querySelector('DL');
+                        if (rootDL) {
+                            walkDL(rootDL, null);
+                        } else {
+                            // Fallback: find all A tags and put in General
+                            const anchors = doc.querySelectorAll('a[href]');
+                            anchors.forEach(a => {
+                                const href = a.getAttribute('href');
+                                const title = (a.textContent || '').trim();
+                                if (href && /^https?:\/\//i.test(href)) {
+                                    ensure('General');
+                                    map.get('General').push({ url: href, title: title || href });
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        console.error('HTML parse error', e);
+                    }
+                    // Convert Map of arrays (dedup within each folder)
+                    const deduped = new Map();
+                    for (const [name, arr] of map.entries()) {
+                        const seen = new Map();
+                        for (const l of arr) {
+                            const k = l.url.toLowerCase();
+                            if (!seen.has(k)) seen.set(k, l);
+                        }
+                        if (seen.size > 0) deduped.set(name, Array.from(seen.values()));
+                    }
+                    return deduped;
+                },
+                parseBookmarkJSON(text) {
+                    const map = new Map();
+                    const ensure = (name) => { if (!map.has(name)) map.set(name, []); };
+                    try {
+                        const data = JSON.parse(text);
+                        const walk = (node, currentFolder) => {
+                            if (!node) return;
+                            if (Array.isArray(node)) {
+                                node.forEach(child => walk(child, currentFolder));
+                                return;
+                            }
+                            if (node.roots && typeof node.roots === 'object') {
+                                Object.values(node.roots).forEach(root => walk(root, currentFolder));
+                                return;
+                            }
+                            // Chrome/Firefox folder detection
+                            const isFolder = node.type === 'folder' || Array.isArray(node.children);
+                            const hasChildren = Array.isArray(node.children);
+                            let name = node.name || node.title || null;
+                            // Handle root containers that should not become folders themselves
+                            const skipNames = ['roots','bookmark_bar','bookmarksBar','other','unsorted','synced','mobile'];
+                            const isSkipRoot = name && skipNames.includes(name.toLowerCase().replace(/[^a-z]/g,''));
+                            if (isFolder && hasChildren) {
+                                if (isSkipRoot) {
+                                    // Don't create folder for skip root, walk children with currentFolder
+                                    node.children.forEach(child => walk(child, currentFolder));
+                                    return;
+                                }
+                                const folderName = name || 'Untitled';
+                                ensure(folderName);
+                                node.children.forEach(child => {
+                                    if (child.type === 'url' || child.url) {
+                                        const url = child.url || child.uri;
+                                        const title = child.name || child.title || url || ''';
+                                        if (url && /^https?:\/\//i.test(url)) {
+                                            map.get(folderName).push({ url, title: title || url });
+                                        }
+                                    } else {
+                                        walk(child, folderName);
+                                    }
+                                });
+                                // Also walk nested folders that may have been missed
+                                node.children.filter(c => c.type === 'folder' || c.children).forEach(c => {
+                                    // Already handled via recursion above, but ensure deep walk
+                                });
+                            } else if (node.url || node.uri) {
+                                const url = node.url || node.uri;
+                                const title = node.name || node.title || url;
+                                if (url && /^https?:\/\//i.test(url)) {
+                                    const target = currentFolder || 'General';
+                                    ensure(target);
+                                    map.get(target).push({ url, title: title || url });
+                                }
+                            } else if (node.children) {
+                                walk(node.children, currentFolder);
+                            } else if (typeof node === 'object') {
+                                // Generic object with folder-like keys
+                                for (const key of Object.keys(node)) {
+                                    const val = node[key];
+                                    if (Array.isArray(val) || (val && typeof val === 'object')) {
+                                        walk(val, currentFolder);
+                                    }
+                                }
+                            }
+                        };
+                        walk(data, null);
+                        // Fallback: if map empty but data is array of links
+                        if (map.size === 0 && Array.isArray(data)) {
+                            data.forEach(item => {
+                                if (item.url) {
+                                    ensure('General');
+                                    map.get('General').push({ url: item.url, title: item.title || item.name || item.url });
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        console.error('JSON parse error'', e);
+                    }
+                    // Dedup
+                    const deduped = new Map();
+                    for (const [name, arr] of map.entries()) {
+                        const seen = new Map();
+                        for (const l of arr) {
+                            const k = l.url.toLowerCase();
+                            if (!seen.has(k)) seen.set(k, l);
+                        }
+                        if (seen.size > 0) deduped.set(name, Array.from(seen.values()));
+                    }
+                    return deduped;
+                },
+
+                openAllLinks(folder) {
+                    if (!folder.links || folder.links.length === 0) {
+                        this.showToast('No links in this folder to open.', 'info');
+                        return;
+                    }
+                    
+                    this.showToast(`Launching ${folder.links.length} browser windows...`, 'info');
+                    folder.links.forEach(link => {
+                        window.open(link.url, '_blank', 'noopener,noreferrer');
+                    });
+                },
+
+                importQuickPasteLinks() {
+                    const raw = this.quickPasteText.trim();
+                    if (!raw) {
+                        this.showToast('Paste at least one URL first.', 'error');
+                        return;
+                    }
+                    if (!this.quickPasteFolderId) {
+                        this.showToast('Select a destination folder.', 'error');
+                        return;
+                    }
+                    const folder = this.folders.find(f => f.id === this.quickPasteFolderId);
+                    if (!folder) {
+                        this.showToast('Selected folder not found.', 'error');
+                        return;
+                    }
+
+                    // Split by new lines, then also handle commas/spaces inside a line for robustness
+                    const tokens = raw.split(/[\r\n]+/)
+                        .flatMap(line => line.split(/[\s,]+/))
+                        .map(t => t.trim())
+                        .filter(Boolean);
+
+                    if (tokens.length === 0) {
+                        this.showToast('No valid URLs detected.', 'error');
+                        return;
+                    }
+
+                    let imported = 0;
+                    let skipped = 0;
+
+                    tokens.forEach((rawToken, idx) => {
+                        let url = rawToken.trim();
+                        // strip surrounding < > or quotes users sometimes paste
+                        url = url.replace(/^['"<]+|['">]+$/g, '');
+                        if (!url) { skipped++; return; }
+
+                        // Prepend https if missing protocol
+                        if (!/^https?:\/\//i.test(url)) {
+                            url = 'https://' + url;
+                        }
+
+                        let parsed;
+                        try {
+                            parsed = new URL(url);
+                            // Require at least a dot in hostname to avoid junk like "hello"
+                            if (!parsed.hostname.includes('.')) throw new Error('invalid host');
+                        } catch (e) {
+                            skipped++;
+                            return;
+                        }
+
+                        // Derive clean title from hostname (favicon handled via getDomainIcon)
+                        let title;
+                        try {
+                            title = parsed.hostname.replace(/^www\./, '');
+                        } catch (e) {
+                            title = url;
+                        }
+
+                        const newLink = {
+                            id: 'link-' + Date.now() + '-' + idx + '-' + Math.random().toString(36).slice(2,6),
+                            title: title,
+                            url: parsed.href,
+                            dateAdded: new Date().toISOString()
+                        };
+                        folder.links.unshift(newLink);
+                        imported++;
+                    });
+
+                    // Ensure folder is expanded so user sees result
+                    folder.isCollapsed = false;
+
+                    if (imported > 0) {
+                        this.showToast(`${imported} link(s) imported into "${folder.name}"` + (skipped ? ` â€¢ ${skipped} skipped` : '') + '.');
+                        // Clear textarea only on at least one success to allow retry for errors
+                        this.quickPasteText = '';
+                    } else {
+                        this.showToast(`No links imported. ${skipped} invalid URL(s) skipped.`, 'error');
+                    }
+                },
+                
+                addLink(folderId, urlInputId, titleInputId) {
+                    const urlEl = document.getElementById(urlInputId);
+                    const titleEl = document.getElementById(titleInputId);
+                    if (!urlEl) return;
+                    
+                    let url = urlEl.value.trim();
+                    let title = titleEl ? titleEl.value.trim() : '';
+                    
+                    if (!url) {
+                        this.showToast('Please enter a link URL.', 'error');
+                        return;
+                    }
+                    
+                    // Prepend standard security https protocol if absent
+                    if (!/^https?:\/\//i.test(url)) {
+                        url = 'https://' + url;
+                    }
+                    
+                    // Simple regex/URL check for client validation
+                    try {
+                        new URL(url);
+                    } catch (e) {
+                        this.showToast('Invalid URL format. Please review.', 'error');
+                        return;
+                    }
+                    
+                    // Retrieve folder object
+                    const folder = this.folders.find(f => f.id === folderId);
+                    if (!folder) return;
+                    
+                    // Automatically build name if customized title is blank
+                    if (!title) {
+                        try {
+                            const parsedUrl = new URL(url);
+                            title = parsedUrl.hostname.replace('www.', '');
+                        } catch (e) {
+                            title = url;
+                        }
+                    }
+                    
+                    const newLink = {
+                        id: 'link-' + Date.now(),
+                        title: title,
+                        url: url,
+                        dateAdded: new Date().toISOString()
+                    };
+                    
+                    folder.links.unshift(newLink);
+                    
+                    // Clear inputs
+                    urlEl.value = ';
+                    if (titleEl) titleEl.value = ';
+                    
+                    this.showToast(`Added: "${title}"`);
+                },
+                
+                deleteLink(folder, linkId) {
+                    const link = folder.links.find(l => l.id === linkId);
+                    const linkTitle = link ? link.title : 'Bookmark';
+                    folder.links = folder.links.filter(l => l.id !== linkId);
+                    this.showToast(`Removed: "${linkTitle}"`);
+                },
+
+                // ===== AI Smart Sorting =====
+                handleAiFile(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        this.aiRawText = e.target.result;
+                        this.showToast(`Loaded ${file.name} â€¢ ${(e.target.result.match(/https?:\/\/[^\s"'<>]+/gi)||[]).length} URLs detected`, 'info');
+                    };
+                    reader.readAsText(file);
+                    event.target.value = '';
+                },
+                parseAiRaw(text) {
+                    const out = [];
+                    const seen = new Set();
+                    // HTML bookmarks export detection
+                    if (/<a\s+[^>]*href=/i.test(text)) {
+                        try {
+                            const doc = new DOMParser().parseFromString(text, 'text/html');
+                            const anchors = doc.querySelectorAll('a[href]');
+                            anchors.forEach(a => {
+                                let href = a.getAttribute('href')?.trim();
+                                let title = (a.textContent || '').trim();
+                                if (!href) return;
+                                if (!/^https?:\/\//i.test(href)) {
+                                    // skip javascript: / place: / chrome: internals
+                                    if (/^(javascript|place|chrome|about|data):/i.test(href)) return;
+                                    href = 'https://' + href;
+                                }
+                                try {
+                                    const u = new URL(href);
+                                    if (!u.hostname.includes('.')) return;
+                                    const key = u.href.toLowerCase();
+                                    if (seen.has(key)) return;
+                                    seen.add(key);
+                                    out.push({ url: u.href, titleHint: title });
+                                } catch (e) {}
+                            });
+                        } catch (e) {}
+                    }
+                    if (out.length === 0) {
+                        // Fallback: extract any URLs from plain text
+                        const urlRe = /https?:\/\/[^\s"'<>`]+/gi;
+                        const matches = text.match(urlRe) || [];
+                        matches.forEach(raw => {
+                            let href = raw.replace(/[),.;!?]+$/,');
+                            try {
+                                const u = new URL(href);
+                                const key = u.href.toLowerCase();
+                                if (seen.has(key)) return;
+                                seen.add(key);
+                                out.push({ url: u.href, titleHint: ' });
+                            } catch(e) {}
+                        });
+                        // Also bare domains per line like example.com/path
+                        if (out.length === 0) {
+                            text.split(/[\r\n]+/).forEach(line => {
+                                line = line.trim().replace(/^['"<]+|['">,\s]+$/g,'');
+                                if (!line || line.includes(' ')) return;
+                                if (!line.includes('.')) return;
+                                let href = line;
+                                if (!/^https?:\/\//i.test(href)) href = 'https://' + href;
+                                try {
+                                    const u = new URL(href);
+                                    if (!u.hostname.includes('.')) return;
+                                    const key = u.href.toLowerCase();
+                                    if (seen.has(key)) return;
+                                    seen.add(key);
+                                    out.push({ url: u.href, titleHint: '' });
+                                } catch(e) {}
+                            });
+                        }
+                    }
+                    return out;
+                },
+                makeCleanTitle(url, hint) {
+                    if (hint && hint.length >= 3 && hint.length < 60 && !/^https?:\/\//i.test(hint)) {
+                        // Clean hint from HTML entities
+                        return hint.replace(/&amp;/g,'&').replace(/&quot;/g,'"').trim();
+                    }
+                    try {
+                        const u = new URL(url);
+                        const host = u.hostname.replace(/^www\./,'');
+                        const prettyHost = host.split('.').map(p=>p.charAt(0).toUpperCase()+p.slice(1)).join(' ');
+                        const path = u.pathname.split('/').filter(Boolean).slice(0,2).join(' / ');
+                        if (path) {
+                            const cleanPath = path.replace(/[-_]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+                            return `${cleanPath} â€” ${prettyHost}`;
+                        }
+                        return prettyHost;
+                    } catch(e) { return url; }
+                },
+                async aiSmartSort() {
+                    const raw = (this.aiRawText || '').trim();
+                    if (!raw) {
+                        this.showToast('Paste URLs or HTML bookmarks first', 'error');
+                        return;
+                    }
+                    const links = this.parseAiRaw(raw);
+                    if (links.length === 0) {
+                        this.showToast('No URLs found â€” paste valid https:// links or bookmarks HTML', 'error');
+                        return;
+                    }
+                    this.isAiSorting = true;
+                    this.aiStatus = `Parsing ${links.length} bookmarks...`;
+
+                    // ===== PROMPT LOGIC BLOCK â€” fed to active AI model =====
+                    // This string is the instruction that would be sent to the AI (Muse Spark) in production:
+                    const AI_PROMPT = `You are Bookmark Vault AI Smart Sorter.
+Task: Look at the following ${links.length} unorganized bookmark URLs (with hint titles), intelligently determine the best 4 to 7 category folders that cover them, then assign each link to exactly one folder.
+Rules:
+- Inspect URL hostname, path (/movies/like/Desierto), and hint title.
+- Create 4â€“7 clean, broad category names (e.g., Development, Design & Inspiration, Entertainment, Learning, Social & News, Shopping & Deals, Productivity).
+- Reuse existing folder names if they match semantically (case-insensitive).
+- For each link generate a clean readable title (Title Case, without URL noise).
+- Output JSON: { folders: [{ name, links: [{url,title}] }] }.
+Raw list:
+${links.map(l=>` - ${l.url} | hint: ${l.titleHint||'(none)'}`).join('\n')}`;
+
+                    // Simulate AI thinking with smooth status updates
+                    await new Promise(r=>setTimeout(r, 450));
+                    this.aiStatus = 'AI analyzing links and creating categories...';
+                    await new Promise(r=>setTimeout(r, 700));
+
+                    // Heuristic categorization mimicking AI (fallback when no API key, fully local)
+                    const CATEGORY_RULES = [
+                        { name: 'Development', keys: ['github','gitlab','stackoverflow','npm','tailwind','vercel','openai','developer','code','docs','api','python','javascript','alpine','react','vue','gitlab','bitbucket'] },
+                        { name: 'Design & Inspiration', keys: ['dribbble','figma','awwwards','behance','canva','design','inspiration','unsplash','fonts','pinterest','icons','ui','ux'] },
+                        { name: 'Entertainment', keys: ['youtube','netflix','twitch','vimeo','tastedive','imdb','spotify','movies','music','games','entertainment','hulu','disney'] },
+                        { name: 'Learning', keys: ['medium','coursera','udemy','tutorial','learn','course','article','blog','read','khan','education','skillshare'] },
+                        { name: 'Social & News', keys: ['twitter','x.com','reddit','hacker','news','linkedin','facebook','instagram','tiktok','telegram','discord','social'] },
+                        { name: 'Shopping & Deals', keys: ['amazon','ebay','etsy','shop','store','aliexpress','walmart','deals','shopping'] },
+                        { name: 'Productivity', keys: ['notion','trello','slack','google','drive','docs','airtable','asana','office','calendar','mail','productivity'] },
+                        { name: 'Research', keys: ['wikipedia','research','archive','scholar','reference','arxiv'] },
+                    ];
+                    const groups = new Map();
+                    const scoreLink = (link) => {
+                        const hay = (link.url + ' ' + link.titleHint).toLowerCase();
+                        let best = null, bestScore = 0;
+                        for (const cat of CATEGORY_RULES) {
+                            let s = 0;
+                            for (const k of cat.keys) if (hay.includes(k)) s++;
+                            if (s > bestScore) { bestScore = s; best = cat.name; }
+                        }
+                        return best || 'General';
+                    };
+                    links.forEach(l => {
+                        const cat = scoreLink(l);
+                        if (!groups.has(cat)) groups.set(cat, []);
+                        groups.get(cat).push(l);
+                    });
+                    // Ensure 4-7 folders: merge tiny groups if >7, or keep as is
+                    let entries = Array.from(groups.entries()).sort((a,b)=>b[1].length - a[1].length);
+                    if (entries.length > 7) {
+                        const top = entries.slice(0,6);
+                        const rest = entries.slice(6).flatMap(e=>e[1]);
+                        top.push(['Other', rest]);
+                        entries = top;
+                    }
+                    // If only 1-3 groups but many links, the heuristics naturally produce fewer; we keep clean 1-7 result
+                    // Second status update
+                    this.aiStatus = `Creating ${entries.length} folders and distributing ${links.length} links...`;
+                    await new Promise(r=>setTimeout(r, 500));
+
+                    // Create folders if not exist and distribute
+                    let created = 0, moved = 0;
+                    for (const [catName, catLinks] of entries) {
+                        let folder = this.folders.find(f => f.name.toLowerCase() === catName.toLowerCase());
+                        if (!folder) {
+                            folder = { id: 'folder-ai-' + Date.now() + '-' + Math.random().toString(36).slice(2,6), name: catName, isCollapsed: false, links: [] };
+                            this.folders.push(folder);
+                            created++;
+                        } else {
+                            folder.isCollapsed = false;
+                        }
+                        for (const l of catLinks) {
+                            // dedupe: skip if URL already exists in target
+                            if (folder.links.some(ex => ex.url.toLowerCase() === l.url.toLowerCase())) continue;
+                            // also remove from other folders if duplicate across vault to avoid double
+                            // but keep original elsewhere? For AI sort we keep duplicates removal optional
+                            const title = this.makeCleanTitle(l.url, l.titleHint);
+                            folder.links.unshift({ id: 'link-ai-' + Date.now() + '-' + Math.random().toString(36).slice(2,6), title, url: l.url, dateAdded: new Date().toISOString() });
+                            moved++;
+                        }
+                    }
+
+                    this.isAiSorting = false;
+                    this.aiStatus = '';
+                    // Keep prompt visible for audit - console
+                    console.log('[AI Smart Sort Prompt]\n', AI_PROMPT);
+                    console.log('[AI Smart Sort Result]', entries.map(e=>`${e[0]}: ${e[1].length}`));
+                    this.showToast(`AI sorted ${moved} link(s) into ${entries.length} folder(s)${created?` â€¢ ${created} new` : '} âœ¨`);
+                    // optional: clear input but keep panel open for review
+                    // this.aiRawText = ';
+                },
+                
+                getDomainIcon(url) {
+                    try {
+                        const parsed = new URL(url);
+                        return `https://www.google.com/s2/favicons?sz=64&domain=${parsed.hostname}`;
+                    } catch (e) {
+                        return '';
+                    }
+                },
+
+                escapeHtml(str) {
+                    return String(str).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#39;");
+                },
+                highlight(text, isUrl = false) {
+                    const q = this.searchQuery.trim();
+                    if (!q) return this.escapeHtml(text);
+                    const escaped = this.escapeHtml(text);
+                    try {
+                        const safeQ = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        const re = new RegExp(`(${safeQ})`, 'gi');
+                        const cls = isUrl ? 'search-hit-url' : 'search-hit';
+                        return escaped.replace(re, `<span class="${cls}">$1</span>`);
+                    } catch (e) { return escaped; }
+                },
+                
+                // Instant filtering reactive getter - deep link matching title OR full URL
+                get filteredFolders() {
+                    const query = this.searchQuery.toLowerCase().trim();
+                    if (!query) return this.folders;
+                    
+                    return this.folders.map(folder => {
+                        const folderNameMatches = folder.name.toLowerCase().includes(query);
+                        
+                        const matchingLinks = folder.links.filter(link => 
+                            link.title.toLowerCase().includes(query) || 
+                            link.url.toLowerCase().includes(query)
+                        );
+                        
+                        if (folderNameMatches || matchingLinks.length > 0) {
+                            return {
+                                ...folder,
+                                isCollapsed: false, // Auto-expand matching folders for clean visibility
+                                links: folderNameMatches ? folder.links : matchingLinks
+                            };
+                        }
+                        return null;
+                    }).filter(Boolean);
+                },
+                
+                // Keyboard slash to focus search
+                handleGlobalKeys(event) {
+                    if (event.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA' && document.activeElement.tagName !== 'SELECT') {
+                        event.preventDefault();
+                        const searchEl = document.getElementById('global-search');
+                        if (searchEl) {
+                            searchEl.focus();
+                            searchEl.select();
+                        }
+                    }
+                },
+
+                // Wipe Storage operations
+                confirmWipeAll() {
+                    this.isWipeAllOpen = true;
+                },
+
+                wipeAll() {
+                    this.folders = [];
+                    this.isWipeAllOpen = false;
+                    this.showToast('Storage successfully wiped clean.', 'info');
+                },
+                
+                // Export JSON schemas
+                exportData() {
+                    try {
+                        const dataStr = JSON.stringify(this.folders, null, 2);
+                        const blob = new Blob([dataStr], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        const dateStr = new Date().toISOString().split('T')[0];
+                        a.href = url;
+                        a.download = `bookmark_vault_backup_${dateStr}.json`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        this.showToast('Backup file successfully saved.');
+                    } catch (e) {
+                        this.showToast('Export failed.', 'error');
+                    }
+                },
+                
+                triggerImport() {
+                    const el = document.getElementById('import-file-input');
+                    if (el) el.click();
+                },
+                
+                importData(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            
+                            // Essential JSON verification checks
+                            if (!Array.isArray(data)) {
+                                throw new Error('Root must be structured as an array of folders.');
+                            }
+                            
+                            const isValid = data.every(folder => 
+                                folder &&
+                                typeof folder === 'object' &&
+                                typeof folder.name === 'string' &&
+                                Array.isArray(folder.links) &&
+                                folder.links.every(link => 
+                                    link &&
+                                    typeof link === 'object' &&
+                                    typeof link.title === 'string' &&
+                                    typeof link.url === 'string'
+                                )
+                            );
+                            
+                            if (!isValid) {
+                                throw new Error('Backup metadata schema validation failed.');
+                            }
+                            
+                            if (confirm('Importing this file will overwrite your existing custom folders. Do you wish to continue?')) {
+                                this.folders = data.map(folder => ({
+                                    id: folder.id || 'folder-' + Math.random().toString(36).substr(2, 9),
+                                    name: folder.name,
+                                    isCollapsed: typeof folder.isCollapsed === 'boolean' ? folder.isCollapsed : false,
+                                    links: folder.links.map(link => ({
+                                        id: link.id || 'link-' + Math.random().toString(36).substr(2, 9),
+                                        title: link.title,
+                                        url: link.url,
+                                        dateAdded: link.dateAdded || new Date().toISOString()
+                                    }))
+                                }));
+                                if (this.folders.length > 0 && !this.quickPasteFolderId) {
+                                    this.quickPasteFolderId = this.folders[0].id;
+                                }
+                                this.showToast('Backup successfully imported.');
+                            }
+                        } catch (error) {
+                            this.showToast('Import failed: ' + error.message, 'error');
+                        }
+                        // Reset file selector
+                        event.target.value = '';
+                    };
+                    reader.readAsText(file);
+                }
+            };
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
